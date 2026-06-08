@@ -50,6 +50,15 @@ The game opens a Swing window and asks for player names before play begins.
 - Player 1 uses `W/A/S/D`; Player 2 uses arrow keys.
 - Current goal handling resets the puck but does not track score. `AirHockeyGame.handleGoals()` and `Rink.paint()` are the likely places to extend scoring.
 
+## Comment Style
+
+- Keep comments simple and high-schooler friendly, not super formal.
+- Start comments with a lowercase letter when it still reads clearly.
+- Do not end comments with periods.
+- Use short `pre:` and `post:` notes only for bigger methods where they actually help.
+- Prefer comments like `// update the scoreboard before drawing` instead of formal textbook wording.
+- Do not comment every line or explain obvious code.
+
 ## Git Hygiene
 
 - Do not commit generated `.class` files or the `bin/` output directory.

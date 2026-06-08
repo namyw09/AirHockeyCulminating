@@ -4,7 +4,7 @@ import javax.swing.JOptionPane;
 
 import framework.Game;
 
-// Brighton Ng + Youngwoo Nam - ICS3U Culminating
+// brighton ng + youngwoo nam - ics3u culminating
 // main game class, all the actual game logic is here
 public class AirHockeyGame extends Game {
 
@@ -23,7 +23,7 @@ public class AirHockeyGame extends Game {
     private Paddle opponentPaddle;
     private Puck puck;
 
-    //initialize the scores for each player
+    // current score for each player
     private int player1Score = 0;
     private int player2Score = 0;
     private boolean gameOver = false;
@@ -32,8 +32,11 @@ public class AirHockeyGame extends Game {
     private String player1Name = "Player 1";
     private String player2Name = "Player 2";
 
-    // pre:  the game window has been created
-    // post: window is sized, objects are created and added, game is ready to play
+    /**
+     * sets up the window, timer, player names, and starting objects
+     * pre:  the game frame exists but nothing has been added yet
+     * post: the rink, puck, paddles, and 0-0 scoreboard are ready
+     */
     public void setup() {
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setTitle("Air Hockey");
@@ -41,7 +44,7 @@ public class AirHockeyGame extends Game {
         setDelay(16);
         setMatchLengthSeconds(MATCH_LENGTH_SECONDS);
 
-        // show the controls before anything starts (joptionpane)
+        // show the controls before anything starts
         JOptionPane.showMessageDialog(this,
                 "Player 1 (Blue): W / A / S / D\nPlayer 2 (Red): Arrow Keys\n\nScore by hitting the puck into the other side's goal.",
                 "How to Play", JOptionPane.INFORMATION_MESSAGE);
@@ -49,13 +52,11 @@ public class AirHockeyGame extends Game {
         player1Name = promptForName("Enter Player 1's name:", "Player 1");
         player2Name = promptForName("Enter Player 2's name:", "Player 2");
 
-        // puck is added first to the gamee so it ends up on top visually
-        // paddles are next rink is added last last
+        // puck and paddles are added before the rink so they stay visible
         puck = new Puck(
                 RINK_X + RINK_WIDTH / 2,
                 RINK_Y + RINK_HEIGHT / 2);
 
-        // create paddle dimensions for each player
         playerPaddle = new Paddle(
                 RINK_X + 80,
                 RINK_Y + RINK_HEIGHT / 2,
@@ -70,7 +71,6 @@ public class AirHockeyGame extends Game {
                 RINK_X, RINK_Y, RINK_WIDTH, RINK_HEIGHT, GOAL_HEIGHT,
                 player1Name, player2Name);
 
-        // methods to add the objects to the rink
         updateScoreboard();
 
         add(puck);
@@ -79,12 +79,14 @@ public class AirHockeyGame extends Game {
         add(rink);
     }
 
-    // pre:  setup() has been called and all objects exist
-    // post: puck moves, input is read, collisions and goals are checked for this frame
+    /**
+     * runs one frame of the game
+     * pre:  setup() is done and all game objects exist
+     * post: movement, goals, and collisions are checked, or the game ends if time is up
+     */
     public void act() {
         updateScoreboard();
 
-        // check if the game is over or if the time's up
         if (gameOver) {
             return;
         }
@@ -101,8 +103,11 @@ public class AirHockeyGame extends Game {
         handlePaddleCollisions();
     }
 
-    // pre:  message and defaultName are not null
-    // post: returns whatever the player typed, or defaultName if they left it blank
+    /**
+     * asks for a player name and uses the default if nothing is typed
+     * pre:  the prompt message and backup name are ready
+     * post: a usable player name is returned
+     */
     private String promptForName(String message, String defaultName) {
         String name = JOptionPane.showInputDialog(this,
                 message, "Player Names", JOptionPane.PLAIN_MESSAGE);
@@ -114,14 +119,22 @@ public class AirHockeyGame extends Game {
         return name;
     }
 
-    // post: the rink has the newest score and clock text before it repaints
+    /**
+     * sends the latest score and timer to the rink
+     * pre:  the rink might not be created yet
+     * post: if the rink exists, the scoreboard matches the game
+     */
     private void updateScoreboard() {
         if (rink != null) {
             rink.setScoreboard(player1Score, player2Score, getFormattedTimeRemaining());
         }
     }
 
-    // post: the timer is stopped and the final result is shown once
+    /**
+     * stops the match and shows who won
+     * pre:  time is up and the game has not ended already
+     * post: the game loop stops and the final result pops up
+     */
     private void finishGame() {
         gameOver = true;
         stopGame();
@@ -142,8 +155,11 @@ public class AirHockeyGame extends Game {
                 "Time's Up", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // pre:  playerPaddle and opponentPaddle exist
-    // post: both paddles move based on which keys are currently held
+    /**
+     * moves both paddles using the keys being held
+     * pre:  both paddles exist and Game has the current key states
+     * post: each paddle stays inside its side of the rink
+     */
     private void handleInput() {
         playerPaddle.move(
                 WKeyPressed(), SKeyPressed(), AKeyPressed(), DKeyPressed(),
@@ -156,9 +172,11 @@ public class AirHockeyGame extends Game {
                 RINK_Y, RINK_Y + RINK_HEIGHT);
     }
 
-    // pre:  puck exists somewhere on the screen
-    // post: if the puck hit a wall, its speed is flipped and it is pushed back inside
-    //       left and right walls only apply outside the goal opening
+    /**
+     * bounces the puck off the rink walls, except where the goals are
+     * pre:  the puck exists and already moved this frame
+     * post: the puck is pushed back in bounds and bounces if it hit a wall
+     */
     private void handleWallCollisions() {
         int goalTop      = RINK_Y + (RINK_HEIGHT - GOAL_HEIGHT) / 2;
         int goalBottom   = goalTop + GOAL_HEIGHT;
@@ -193,9 +211,11 @@ public class AirHockeyGame extends Game {
         }
     }
 
-    // pre:  puck exists
-    // post: if the puck crossed a goal line while lined up with the opening,
-    //       it gets reset to center and sent toward the player who was scored on
+    /**
+     * updates the score if the puck goes into a goal
+     * pre:  the puck exists and might be lined up with a goal
+     * post: the right score goes up, the scoreboard updates, and the puck resets
+     */
     private void handleGoals() {
         int goalTop      = RINK_Y + (RINK_HEIGHT - GOAL_HEIGHT) / 2;
         int goalBottom   = goalTop + GOAL_HEIGHT;
@@ -225,9 +245,11 @@ public class AirHockeyGame extends Game {
         }
     }
 
-    // pre:  puck, playerPaddle, and opponentPaddle all exist
-    // post: if the puck is touching a paddle it bounces off
-    //       else if used so only one paddle is handled per frame
+    /**
+     * bounces the puck when it touches a paddle
+     * pre:  the puck and both paddles exist
+     * post: if the puck hits a paddle, it moves out and reverses direction
+     */
     private void handlePaddleCollisions() {
         if (puck.collides(playerPaddle)) {
             puck.hitByPaddle(playerPaddle);

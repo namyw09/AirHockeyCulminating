@@ -22,8 +22,11 @@ public class Rink extends GameObject {
     private int player2Score = 0;
     private String timeText = "01:30";
 
-    // pre:  all int values are positive, p1 and p2 are not null
-    // post: all dimensions and names are saved, component is sized to cover the full window
+    /**
+     * creates the rink background and saves the player labels
+     * pre:  dimensions are positive and player names are not null
+     * post: the rink covers the window and is ready to draw
+     */
     public Rink(int ww, int wh, int rx, int ry, int rw, int rh, int gh, String p1, String p2) {
         windowWidth = ww;
         windowHeight = wh;
@@ -41,7 +44,11 @@ public class Rink extends GameObject {
         setY(0);
     }
 
-    // post: scoreboard values are saved for the next paint
+    /**
+     * updates the score and timer shown at the top of the rink
+     * pre:  the game gives the current scores and timer text
+     * post: the new scoreboard values are saved and the rink repaints
+     */
     public void setScoreboard(int p1Score, int p2Score, String timerText) {
         player1Score = p1Score;
         player2Score = p2Score;
@@ -49,8 +56,11 @@ public class Rink extends GameObject {
         repaint();
     }
 
-    // pre:  g is a valid Graphics object, all dimension fields are set
-    // post: the full rink is drawn - background, ice, goals, center line, and name labels
+    /**
+     * draws the rink, goals, labels, and scoreboard
+     * pre:  the rink dimensions and scoreboard values are set
+     * post: the current rink is drawn on screen
+     */
     public void paint(Graphics g) {
         // dark background outside the rink
         g.setColor(new Color(20, 30, 48));
@@ -84,7 +94,7 @@ public class Rink extends GameObject {
         g.setColor(new Color(100, 140, 180));
         g.drawLine(centerX, rinkY, centerX, rinkY + rinkHeight);
 
-        // center the scoreboard so longer names still look reasonable
+        // center the scoreboard so longer names still look okay
         String scoreboard = player1Name + " " + player1Score
                 + "   " + timeText + "   "
                 + player2Name + " " + player2Score;
@@ -102,7 +112,10 @@ public class Rink extends GameObject {
         g.drawString(player2Name + " (Arrows)", rinkX + rinkWidth - 120, rinkY - 10);
     }
 
-    // post: nothing - the rink doesn't move or change state
+    /**
+     * the rink does not need to do anything each frame
+     * post: no state changes
+     */
     public void act() {
     }
 }
