@@ -1,11 +1,11 @@
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 
 import framework.GameObject;
 
-// draws the rink - ice surface, goals, center line, and player labels
-// TODO: add scoreboard and timer for the final version
+// draws the rink - ice surface, goals, center line, scoreboard, and player labels
 public class Rink extends GameObject {
 
     private int windowWidth;
@@ -18,6 +18,9 @@ public class Rink extends GameObject {
 
     private String player1Name;
     private String player2Name;
+    private int player1Score = 0;
+    private int player2Score = 0;
+    private String timeText = "01:30";
 
     // pre:  all int values are positive, p1 and p2 are not null
     // post: all dimensions and names are saved, component is sized to cover the full window
@@ -36,6 +39,14 @@ public class Rink extends GameObject {
         setSize(ww, wh);
         setX(0);
         setY(0);
+    }
+
+    // post: scoreboard values are saved for the next paint
+    public void setScoreboard(int p1Score, int p2Score, String timerText) {
+        player1Score = p1Score;
+        player2Score = p2Score;
+        timeText = timerText;
+        repaint();
     }
 
     // pre:  g is a valid Graphics object, all dimension fields are set
@@ -73,10 +84,14 @@ public class Rink extends GameObject {
         g.setColor(new Color(100, 140, 180));
         g.drawLine(centerX, rinkY, centerX, rinkY + rinkHeight);
 
-        // player name header at the top - position 260 is roughly centered for most names
+        // center the scoreboard so longer names still look reasonable
+        String scoreboard = player1Name + " " + player1Score
+                + "   " + timeText + "   "
+                + player2Name + " " + player2Score;
         g.setColor(Color.WHITE);
         g.setFont(new Font("SansSerif", Font.BOLD, 22));
-        g.drawString(player1Name + " VS " + player2Name, 260, 50);
+        FontMetrics metrics = g.getFontMetrics();
+        g.drawString(scoreboard, (windowWidth - metrics.stringWidth(scoreboard)) / 2, 50);
 
         // control labels above each side of the rink
         g.setColor(new Color(100, 150, 230));
