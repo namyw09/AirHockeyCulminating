@@ -43,6 +43,10 @@ public abstract class Game extends JFrame {
 	private boolean _initialized = false;
 	private ArrayList _ObjectList = new ArrayList();
 	private Timer _t;
+	private int matchLengthSeconds = 0;
+	private int timeRemainingSeconds = 0;
+	private long timerStartMillis = 0;
+	private boolean timerStarted = false;
 //we customized this code- it was ZXNM, but we needed WASD and arrow keys. so we changed ZXNM to WASD + arrows.
 	private boolean wPressed = false;
 private boolean aPressed = false;
@@ -85,7 +89,51 @@ public boolean LeftKeyPressed() {
 public boolean RightKeyPressed() {
     return rightPressed;
 }
-	
+
+	public void setMatchLengthSeconds(int seconds) {
+		if (seconds < 0) {
+			seconds = 0;
+		}
+
+		matchLengthSeconds = seconds;
+		timeRemainingSeconds = seconds;
+	}
+
+	public void resetGameTimer() {
+		timerStartMillis = System.currentTimeMillis();
+		timeRemainingSeconds = matchLengthSeconds;
+		timerStarted = true;
+	}
+
+	public int getTimeRemainingSeconds() {
+		return timeRemainingSeconds;
+	}
+
+	public String getFormattedTimeRemaining() {
+		int minutes = timeRemainingSeconds / 60;
+		int seconds = timeRemainingSeconds % 60;
+
+		return String.format("%02d:%02d", minutes, seconds);
+	}
+
+	public boolean isTimeUp() {
+		return timerStarted && timeRemainingSeconds <= 0;
+	}
+
+	private void updateGameTimer() {
+		if (timerStarted == false) {
+			return;
+		}
+
+		// Compare against the real clock so slow frames do not stretch the match.
+		int elapsedSeconds = (int)((System.currentTimeMillis() - timerStartMillis) / 1000);
+		timeRemainingSeconds = matchLengthSeconds - elapsedSeconds;
+
+		if (timeRemainingSeconds < 0) {
+			timeRemainingSeconds = 0;
+		}
+	}
+
 	/**
 	 * <code>true</code> if the 'Z' key is being held down
 	 */
@@ -171,6 +219,7 @@ public boolean RightKeyPressed() {
 	public void initComponents() {
 		getContentPane().setBackground(Color.black);
 		setup();
+		resetGameTimer();
 		for (int i = 0; i < _ObjectList.size(); i++) {
 				GameObject o = (GameObject)_ObjectList.get(i);
 				o.repaint();
@@ -261,10 +310,11 @@ public boolean RightKeyPressed() {
        		}
        	);
        _t = new Timer(1, new ActionListener() {
-       		public void actionPerformed(ActionEvent e) {
-   				act();
-   				for (int i = 0; i < _ObjectList.size(); i++) {
-   					GameObject o = (GameObject)_ObjectList.get(i);
+            public void actionPerformed(ActionEvent e) {
+                updateGameTimer();
+                act();
+                for (int i = 0; i < _ObjectList.size(); i++) {
+                    GameObject o = (GameObject)_ObjectList.get(i);
    					o.act();
    				}
        		}
