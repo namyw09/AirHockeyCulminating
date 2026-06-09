@@ -11,6 +11,7 @@ public class Paddle extends GameObject {
     private static final int SPEED = 5;
 
     private Color paddleColor;
+    private int currentSpeed = SPEED;
 
     /**
      * pre:  centerX and centerY are valid positions on screen, color is not null
@@ -33,10 +34,10 @@ public class Paddle extends GameObject {
         int centerX = getX() + PADDLE_WIDTH / 2;
         int centerY = getY() + getHeight() / 2;
 
-        if (up)    { centerY = centerY - SPEED; }
-        if (down)  { centerY = centerY + SPEED; }
-        if (left)  { centerX = centerX - SPEED; }
-        if (right) { centerX = centerX + SPEED; }
+        if (up)    { centerY = centerY - currentSpeed; }
+        if (down)  { centerY = centerY + currentSpeed; }
+        if (left)  { centerX = centerX - currentSpeed; }
+        if (right) { centerX = centerX + currentSpeed; }
 
         // keep the paddle inside its allowed area
         if (centerX - PADDLE_WIDTH / 2 < minX) {
@@ -77,6 +78,30 @@ public class Paddle extends GameObject {
         setSize(PADDLE_WIDTH, PADDLE_HEIGHT);
         setY(centerY - getHeight() / 2);
         repaint();
+    }
+
+    /**
+     * pre:  paddle exists
+     * post: currentSpeed is doubled; paddle moves 2x faster until revertSpeed() is called
+     */
+    public void speedUp() {
+        currentSpeed = SPEED * 2;
+    }
+
+    /**
+     * pre:  paddle exists
+     * post: currentSpeed is halved; paddle moves at half speed until revertSpeed() is called
+     */
+    public void slowDown() {
+        currentSpeed = Math.max(1, SPEED / 2);
+    }
+
+    /**
+     * pre:  speedUp() or slowDown() was called
+     * post: currentSpeed is restored to the default SPEED
+     */
+    public void revertSpeed() {
+        currentSpeed = SPEED;
     }
 
     // post: nothing - paddle movement is controlled through move() in AirHockeyGame

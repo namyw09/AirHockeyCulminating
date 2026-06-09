@@ -6,22 +6,30 @@ public class Powerup {
     public static final int EFFECT_MS     = 5000; // ms the paddle effect lasts after collection
     public static final int RESPAWN_MS    = 6000; // ms to wait before the next spawn
 
+    // powerup types
+    public static final int TYPE_SIZE  = 1; // doubles owner paddle height
+    public static final int TYPE_SPEED = 2; // doubles owner paddle speed
+    public static final int TYPE_SLOW  = 3; // halves opponent paddle speed
+
     private int  centerX;
     private int  centerY;
     private int  ownerPlayer;  // 1 = left half (player 1), 2 = right half (player 2)
+    private int  type;
     private long spawnTime;
     private boolean active;
     private boolean collected;
 
     /**
      * pre:  cx and cy are valid center coordinates inside the rink,
-     *       owner is 1 or 2, spawnMillis is System.currentTimeMillis()
-     * post: a new active, uncollected powerup exists at (cx, cy) for the given owner
+     *       owner is 1 or 2, type is TYPE_SIZE/TYPE_SPEED/TYPE_SLOW,
+     *       spawnMillis is System.currentTimeMillis()
+     * post: a new active, uncollected powerup of the given type exists at (cx, cy)
      */
-    public Powerup(int cx, int cy, int owner, long spawnMillis) {
+    public Powerup(int cx, int cy, int owner, int powerupType, long spawnMillis) {
         centerX     = cx;
         centerY     = cy;
         ownerPlayer = owner;
+        type        = powerupType;
         spawnTime   = spawnMillis;
         active      = true;
         collected   = false;
@@ -49,6 +57,14 @@ public class Powerup {
      */
     public int getOwnerPlayer() {
         return ownerPlayer;
+    }
+
+    /**
+     * pre:  powerup exists
+     * post: returns the type constant (TYPE_SIZE, TYPE_SPEED, or TYPE_SLOW)
+     */
+    public int getType() {
+        return type;
     }
 
     /**

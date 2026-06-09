@@ -24,8 +24,9 @@ public class Rink extends GameObject {
 
     // powerup icon state - set by AirHockeyGame, drawn in paint()
     private boolean showPowerup = false;
-    private int powerupX = 0;
-    private int powerupY = 0;
+    private int powerupX    = 0;
+    private int powerupY    = 0;
+    private int powerupType = 0;
 
     /**
      * creates the rink background and saves the player labels
@@ -168,13 +169,15 @@ public class Rink extends GameObject {
 
     /**
      * shows a powerup icon at the given screen coordinates on the next repaint
-     * pre:  x and y are valid center coordinates within the rink bounds
-     * post: showPowerup is true and the icon will be drawn at (x, y)
+     * pre:  x and y are valid center coordinates within the rink bounds;
+     *       type is Powerup.TYPE_SIZE, TYPE_SPEED, or TYPE_SLOW
+     * post: showPowerup is true and the correct icon will be drawn at (x, y)
      */
-    public void setPowerupPosition(int x, int y) {
+    public void setPowerupPosition(int x, int y, int type) {
         showPowerup = true;
-        powerupX = x;
-        powerupY = y;
+        powerupX    = x;
+        powerupY    = y;
+        powerupType = type;
         repaint();
     }
 
@@ -189,30 +192,50 @@ public class Rink extends GameObject {
     }
 
     /**
-     * draws the size-increase powerup icon: a gold circle with a glow ring and "2x" label
-     * pre:  cx and cy are the center of the icon; Powerup.RADIUS is the icon radius
-     * post: a gold circle with a white border and centered "2x" text is painted at (cx, cy)
+     * draws the powerup icon at (cx, cy) using a color and label matched to its type
+     * pre:  cx and cy are the center of the icon; powerupType is set to a valid type constant
+     * post: a colored circle with a glow ring, white border, and type label is painted at (cx, cy)
+     *       gold "2x" = size, cyan ">>" = speed, orange "<<" = slow opponent
      */
     private void drawPowerupIcon(Graphics g, int cx, int cy) {
         int r = Powerup.RADIUS;
 
+        // pick color and label based on type
+        Color fillColor;
+        Color glowColor;
+        String label;
+
+        if (powerupType == Powerup.TYPE_SPEED) {
+            fillColor = new Color(0, 200, 220);
+            glowColor = new Color(0, 220, 255, 120);
+            label     = ">>";
+        } else if (powerupType == Powerup.TYPE_SLOW) {
+            fillColor = new Color(255, 140, 0);
+            glowColor = new Color(255, 160, 0, 120);
+            label     = "<<";
+        } else {
+            // TYPE_SIZE (default)
+            fillColor = new Color(255, 200, 0);
+            glowColor = new Color(255, 220, 50, 120);
+            label     = "2x";
+        }
+
         // soft glow ring behind the icon
-        g.setColor(new Color(255, 220, 50, 120));
+        g.setColor(glowColor);
         g.fillOval(cx - r - 4, cy - r - 4, (r + 4) * 2, (r + 4) * 2);
 
-        // gold filled circle
-        g.setColor(new Color(255, 200, 0));
+        // filled circle
+        g.setColor(fillColor);
         g.fillOval(cx - r, cy - r, r * 2, r * 2);
 
         // white border
         g.setColor(Color.WHITE);
         g.drawOval(cx - r, cy - r, r * 2, r * 2);
 
-        // "2x" label centered inside the circle
+        // label centered inside the circle
         g.setColor(Color.BLACK);
         g.setFont(new Font("SansSerif", Font.BOLD, 11));
         FontMetrics fm = g.getFontMetrics();
-        String label = "2x";
         g.drawString(label, cx - fm.stringWidth(label) / 2, cy + fm.getAscent() / 2 - 2);
     }
 
