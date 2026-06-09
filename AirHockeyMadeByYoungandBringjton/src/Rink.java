@@ -22,11 +22,6 @@ public class Rink extends GameObject {
     private int player2Score = 0;
     private String timeText = "01:30";
 
-    // powerup icon state - set by AirHockeyGame, drawn in paint()
-    private boolean showPowerup = false;
-    private int powerupX    = 0;
-    private int powerupY    = 0;
-    private int powerupType = 0;
 
     /**
      * creates the rink background and saves the player labels
@@ -100,10 +95,6 @@ public class Rink extends GameObject {
         g.setColor(new Color(100, 140, 180));
         g.drawLine(centerX, rinkY, centerX, rinkY + rinkHeight);
 
-        if (showPowerup) {
-            drawPowerupIcon(g, powerupX, powerupY);
-        }
-
         drawTimer(g);
         drawPlayerScores(g);
 
@@ -165,78 +156,6 @@ public class Rink extends GameObject {
         String s2       = String.valueOf(player2Score);
         int labelRight  = rinkX + rinkWidth - 10;
         g.drawString(s2, labelRight - fm.stringWidth(s2), scoreY);
-    }
-
-    /**
-     * shows a powerup icon at the given screen coordinates on the next repaint
-     * pre:  x and y are valid center coordinates within the rink bounds;
-     *       type is Powerup.TYPE_SIZE, TYPE_SPEED, or TYPE_SLOW
-     * post: showPowerup is true and the correct icon will be drawn at (x, y)
-     */
-    public void setPowerupPosition(int x, int y, int type) {
-        showPowerup = true;
-        powerupX    = x;
-        powerupY    = y;
-        powerupType = type;
-        repaint();
-    }
-
-    /**
-     * hides the powerup icon on the next repaint
-     * pre:  none
-     * post: showPowerup is false and no icon will be drawn
-     */
-    public void clearPowerup() {
-        showPowerup = false;
-        repaint();
-    }
-
-    /**
-     * draws the powerup icon at (cx, cy) using a color and label matched to its type
-     * pre:  cx and cy are the center of the icon; powerupType is set to a valid type constant
-     * post: a colored circle with a glow ring, white border, and type label is painted at (cx, cy)
-     *       gold "2x" = size, cyan ">>" = speed, orange "<<" = slow opponent
-     */
-    private void drawPowerupIcon(Graphics g, int cx, int cy) {
-        int r = Powerup.RADIUS;
-
-        // pick color and label based on type
-        Color fillColor;
-        Color glowColor;
-        String label;
-
-        if (powerupType == Powerup.TYPE_SPEED) {
-            fillColor = new Color(0, 200, 220);
-            glowColor = new Color(0, 220, 255, 120);
-            label     = ">>";
-        } else if (powerupType == Powerup.TYPE_SLOW) {
-            fillColor = new Color(255, 140, 0);
-            glowColor = new Color(255, 160, 0, 120);
-            label     = "<<";
-        } else {
-            // TYPE_SIZE (default)
-            fillColor = new Color(255, 200, 0);
-            glowColor = new Color(255, 220, 50, 120);
-            label     = "2x";
-        }
-
-        // soft glow ring behind the icon
-        g.setColor(glowColor);
-        g.fillOval(cx - r - 4, cy - r - 4, (r + 4) * 2, (r + 4) * 2);
-
-        // filled circle
-        g.setColor(fillColor);
-        g.fillOval(cx - r, cy - r, r * 2, r * 2);
-
-        // white border
-        g.setColor(Color.WHITE);
-        g.drawOval(cx - r, cy - r, r * 2, r * 2);
-
-        // label centered inside the circle
-        g.setColor(Color.BLACK);
-        g.setFont(new Font("SansSerif", Font.BOLD, 11));
-        FontMetrics fm = g.getFontMetrics();
-        g.drawString(label, cx - fm.stringWidth(label) / 2, cy + fm.getAscent() / 2 - 2);
     }
 
     /**

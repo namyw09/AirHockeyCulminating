@@ -323,7 +323,9 @@ public class AirHockeyGame extends Game {
         int type = random.nextInt(3) + 1; // 1=size, 2=speed, 3=slow
 
         currentPowerup = new Powerup(cx, cy, owner, type, System.currentTimeMillis());
-        rink.setPowerupPosition(cx, cy, type);
+        add(currentPowerup);
+        // place the powerup just above the rink in the z-order so it appears on the ice
+        getContentPane().setComponentZOrder(currentPowerup, getContentPane().getComponentCount() - 2);
     }
 
     /**
@@ -377,23 +379,18 @@ public class AirHockeyGame extends Game {
         // remove the powerup if it ran out of field time without being collected
         currentPowerup.checkExpiry(now);
         if (currentPowerup.isActive() == false && currentPowerup.isCollected() == false) {
-            rink.clearPowerup();
+            remove(currentPowerup);
             lastPowerupEndTime = now;
             currentPowerup = null;
             return;
         }
 
-        // circle-circle collision: check if the puck center is within pickup range
-        int dx = puck.getCenterX() - currentPowerup.getCenterX();
-        int dy = puck.getCenterY() - currentPowerup.getCenterY();
-        double dist = Math.hypot(dx, dy);
-
-        if (dist < puck.getRadius() + Powerup.RADIUS) {
+        if (puck.collides(currentPowerup)) {
             int owner = currentPowerup.getOwnerPlayer();
             int type  = currentPowerup.getType();
 
             currentPowerup.collect();
-            rink.clearPowerup();
+            remove(currentPowerup);
             lastPowerupEndTime = now;
             currentPowerup     = null;
 
