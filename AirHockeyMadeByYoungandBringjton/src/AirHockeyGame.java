@@ -385,7 +385,9 @@ public class AirHockeyGame extends Game {
             return;
         }
 
-        if (puck.collides(currentPowerup)) {
+        if (puck.collides(currentPowerup)
+                || playerPaddle.collides(currentPowerup)
+                || opponentPaddle.collides(currentPowerup)) {
             int owner = currentPowerup.getOwnerPlayer();
             int type  = currentPowerup.getType();
 

@@ -9,7 +9,7 @@ import framework.GameObject;
 public class Powerup extends GameObject {
 
     public static final int RADIUS        = 18;
-    public static final int FIELD_LIVE_MS = 2000; // ms the icon stays on the field
+    public static final int FIELD_LIVE_MS = 5000; // ms the icon stays on the field
     public static final int EFFECT_MS     = 5000; // ms the paddle effect lasts after collection
     public static final int RESPAWN_MS    = 6000; // ms to wait before the next spawn
 
