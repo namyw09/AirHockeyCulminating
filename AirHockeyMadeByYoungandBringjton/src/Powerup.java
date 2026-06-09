@@ -38,9 +38,10 @@ public class Powerup extends GameObject {
         active      = true;
         collected   = false;
 
-        setSize(RADIUS * 2, RADIUS * 2);
-        setX(cx - RADIUS);
-        setY(cy - RADIUS);
+        // component is padded 4px each side so the glow ring is not clipped
+        setSize(RADIUS * 2 + 8, RADIUS * 2 + 8);
+        setX(cx - RADIUS - 4);
+        setY(cy - RADIUS - 4);
     }
 
     /**
@@ -48,7 +49,7 @@ public class Powerup extends GameObject {
      * post: returns the horizontal center of the powerup icon on screen
      */
     public int getCenterX() {
-        return getX() + RADIUS;
+        return getX() + RADIUS + 4;
     }
 
     /**
@@ -56,7 +57,7 @@ public class Powerup extends GameObject {
      * post: returns the vertical center of the powerup icon on screen
      */
     public int getCenterY() {
-        return getY() + RADIUS;
+        return getY() + RADIUS + 4;
     }
 
     /**
@@ -123,8 +124,9 @@ public class Powerup extends GameObject {
      *       gold "2x" for size, cyan ">>" for speed, orange "<<" for slow opponent
      */
     public void paint(Graphics g) {
-        int cx = RADIUS;
-        int cy = RADIUS;
+        // center within the padded component (RADIUS + 4px glow padding each side)
+        int cx = RADIUS + 4;
+        int cy = RADIUS + 4;
         int r  = RADIUS;
 
         // pick fill color, glow color, and label based on type

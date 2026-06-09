@@ -295,7 +295,7 @@ public class AirHockeyGame extends Game {
     /**
      * picks a random position in one half of the rink and spawns a new powerup there
      * pre:  rink is initialized; random is ready
-     * post: currentPowerup is set to a new active powerup and the rink shows its icon
+     * post: currentPowerup is set to a new active powerup and added to the game above the rink layer
      */
     private void spawnPowerup() {
         int rinkCenterX = RINK_X + RINK_WIDTH / 2;
@@ -405,13 +405,23 @@ public class AirHockeyGame extends Game {
 
             } else if (type == Powerup.TYPE_SPEED) {
                 ownerPaddle.speedUp();
-                if (owner == 1) { playerPaddleSpeedy   = true; playerSpeedyStart   = now; }
-                else            { opponentPaddleSpeedy = true; opponentSpeedyStart = now; }
+                if (owner == 1) {
+                    playerPaddleSpeedy = true;  playerSpeedyStart  = now;
+                    playerPaddleSlowed = false; // cancel any slow on the same paddle
+                } else {
+                    opponentPaddleSpeedy = true;  opponentSpeedyStart  = now;
+                    opponentPaddleSlowed = false;
+                }
 
             } else if (type == Powerup.TYPE_SLOW) {
                 targetPaddle.slowDown();
-                if (owner == 1) { opponentPaddleSlowed = true; opponentSlowedStart = now; }
-                else            { playerPaddleSlowed   = true; playerSlowedStart   = now; }
+                if (owner == 1) {
+                    opponentPaddleSlowed = true;  opponentSlowedStart  = now;
+                    opponentPaddleSpeedy = false; // cancel any speed on the same paddle
+                } else {
+                    playerPaddleSlowed = true;  playerSlowedStart  = now;
+                    playerPaddleSpeedy = false;
+                }
             }
         }
     }
