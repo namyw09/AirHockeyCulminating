@@ -35,6 +35,8 @@ public class HomeScreen extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
 
+        MusicPlayer.start(MusicPlayer.findThemeFile());
+
         JPanel panel = new JPanel() {
             public void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -64,6 +66,7 @@ public class HomeScreen extends JFrame {
         JButton playBtn = makeButton("▶   PLAY", new Color(54, 124, 230));
         playBtn.setBounds(btnX, 268, 230, 54);
         playBtn.addActionListener(e -> {
+            MusicPlayer.stop();
             dispose();
             AirHockeyApp.launchGame();
         });
