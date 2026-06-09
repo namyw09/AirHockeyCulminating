@@ -22,6 +22,11 @@ public class Rink extends GameObject {
     private int player2Score = 0;
     private String timeText = "01:30";
 
+    // powerup icon state - set by AirHockeyGame, drawn in paint()
+    private boolean showPowerup = false;
+    private int powerupX = 0;
+    private int powerupY = 0;
+
     /**
      * creates the rink background and saves the player labels
      * pre:  dimensions are positive and player names are not null
@@ -94,22 +99,121 @@ public class Rink extends GameObject {
         g.setColor(new Color(100, 140, 180));
         g.drawLine(centerX, rinkY, centerX, rinkY + rinkHeight);
 
-        // center the scoreboard so longer names still look okay
-        String scoreboard = player1Name + " " + player1Score
-                + "   " + timeText + "   "
-                + player2Name + " " + player2Score;
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("SansSerif", Font.BOLD, 22));
-        FontMetrics metrics = g.getFontMetrics();
-        g.drawString(scoreboard, (windowWidth - metrics.stringWidth(scoreboard)) / 2, 50);
+        if (showPowerup) {
+            drawPowerupIcon(g, powerupX, powerupY);
+        }
 
-        // control labels above each side of the rink
+        drawTimer(g);
+        drawPlayerScores(g);
+
+        // control labels at the bottom of the header strip, one per side
         g.setColor(new Color(100, 150, 230));
-        g.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        g.drawString(player1Name + " (W/A/S/D)", rinkX + 10, rinkY - 10);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        g.drawString(player1Name + " (W/A/S/D)", rinkX + 10, rinkY - 6);
 
         g.setColor(new Color(220, 100, 100));
-        g.drawString(player2Name + " (Arrows)", rinkX + rinkWidth - 120, rinkY - 10);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        FontMetrics lm = g.getFontMetrics();
+        g.drawString(player2Name + " (Arrows)",
+                rinkX + rinkWidth - lm.stringWidth(player2Name + " (Arrows)") - 10, rinkY - 6);
+    }
+
+    /**
+     * draws the retro timer: timeText in a monospaced font centered horizontally in the header,
+     * surrounded by a white rectangle
+     * pre:  timeText is not null; rinkY defines the available header height
+     * post: a filled rectangle with a white border and retro monospaced time text is painted
+     *       at the horizontal center of the window, vertically centered in the header strip
+     */
+    private void drawTimer(Graphics g) {
+        g.setFont(new Font("Monospaced", Font.BOLD, 28));
+        FontMetrics fm = g.getFontMetrics();
+        int padX  = 14;
+        int padY  = 7;
+        int boxW  = fm.stringWidth(timeText) + padX * 2;
+        int boxH  = fm.getAscent() + padY * 2;
+        int boxX  = (windowWidth - boxW) / 2;
+        int boxY  = (rinkY - boxH) / 2;
+
+        // dark fill so the border reads clearly against the background
+        g.setColor(new Color(10, 15, 25));
+        g.fillRect(boxX, boxY, boxW, boxH);
+
+        g.setColor(Color.WHITE);
+        g.drawRect(boxX, boxY, boxW, boxH);
+        g.drawString(timeText, boxX + padX, boxY + padY + fm.getAscent() - 2);
+    }
+
+    /**
+     * draws each player's current score above their control label on their side of the header
+     * pre:  player1Score and player2Score are set; rinkX, rinkY, rinkWidth are defined
+     * post: player 1's score in blue is drawn above the left label; player 2's score in red is
+     *       drawn above the right label, right-aligned to the label's right edge
+     */
+    private void drawPlayerScores(Graphics g) {
+        g.setFont(new Font("SansSerif", Font.BOLD, 22));
+        FontMetrics fm = g.getFontMetrics();
+        int scoreY = rinkY - 24;
+
+        // player 1 - left side, aligned with the label's left edge
+        g.setColor(new Color(100, 150, 230));
+        g.drawString(String.valueOf(player1Score), rinkX + 10, scoreY);
+
+        // player 2 - right side, right-aligned to match the label's right edge
+        g.setColor(new Color(220, 100, 100));
+        String s2       = String.valueOf(player2Score);
+        int labelRight  = rinkX + rinkWidth - 10;
+        g.drawString(s2, labelRight - fm.stringWidth(s2), scoreY);
+    }
+
+    /**
+     * shows a powerup icon at the given screen coordinates on the next repaint
+     * pre:  x and y are valid center coordinates within the rink bounds
+     * post: showPowerup is true and the icon will be drawn at (x, y)
+     */
+    public void setPowerupPosition(int x, int y) {
+        showPowerup = true;
+        powerupX = x;
+        powerupY = y;
+        repaint();
+    }
+
+    /**
+     * hides the powerup icon on the next repaint
+     * pre:  none
+     * post: showPowerup is false and no icon will be drawn
+     */
+    public void clearPowerup() {
+        showPowerup = false;
+        repaint();
+    }
+
+    /**
+     * draws the size-increase powerup icon: a gold circle with a glow ring and "2x" label
+     * pre:  cx and cy are the center of the icon; Powerup.RADIUS is the icon radius
+     * post: a gold circle with a white border and centered "2x" text is painted at (cx, cy)
+     */
+    private void drawPowerupIcon(Graphics g, int cx, int cy) {
+        int r = Powerup.RADIUS;
+
+        // soft glow ring behind the icon
+        g.setColor(new Color(255, 220, 50, 120));
+        g.fillOval(cx - r - 4, cy - r - 4, (r + 4) * 2, (r + 4) * 2);
+
+        // gold filled circle
+        g.setColor(new Color(255, 200, 0));
+        g.fillOval(cx - r, cy - r, r * 2, r * 2);
+
+        // white border
+        g.setColor(Color.WHITE);
+        g.drawOval(cx - r, cy - r, r * 2, r * 2);
+
+        // "2x" label centered inside the circle
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("SansSerif", Font.BOLD, 11));
+        FontMetrics fm = g.getFontMetrics();
+        String label = "2x";
+        g.drawString(label, cx - fm.stringWidth(label) / 2, cy + fm.getAscent() / 2 - 2);
     }
 
     /**

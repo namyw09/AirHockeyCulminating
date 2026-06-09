@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.util.Random;
 
 import javax.swing.JOptionPane;
 
@@ -28,6 +29,15 @@ public class AirHockeyGame extends Game {
     private int player1Score = 0;
     private int player2Score = 0;
     private boolean gameOver = false;
+
+    // powerup state
+    private Powerup currentPowerup     = null;
+    private long    lastPowerupEndTime = 0;
+    private boolean player1Grown       = false;
+    private long    player1GrowStart   = 0;
+    private boolean player2Grown       = false;
+    private long    player2GrowStart   = 0;
+    private Random  random             = new Random();
 
     // default names in case the player skips the input
     private String player1Name = "Player 1";
@@ -78,6 +88,8 @@ public class AirHockeyGame extends Game {
         add(playerPaddle);
         add(opponentPaddle);
         add(rink);
+
+        lastPowerupEndTime = System.currentTimeMillis();
     }
 
     /**
@@ -105,6 +117,7 @@ public class AirHockeyGame extends Game {
         }
         handleWallCollisions();
         handlePaddleCollisions();
+        handlePowerup();
     }
 
     /**
@@ -144,6 +157,8 @@ public class AirHockeyGame extends Game {
         stopGame();
         updateScoreboard();
 
+            // if condiiton to determine the winner, also checks for tie game possibility
+
         String result;
         if (player1Score > player2Score) {
             result = player1Name + " wins!";
@@ -153,6 +168,7 @@ public class AirHockeyGame extends Game {
             result = "Tie game!";
         }
 
+        //display the finak score of the game
         JOptionPane.showMessageDialog(this,
                 result + "\nFinal Score: " + player1Name + " " + player1Score
                         + " - " + player2Score + " " + player2Name,
@@ -264,7 +280,107 @@ public class AirHockeyGame extends Game {
      */
     private void checkScoreLimit() {
         if (player1Score >= SCORE_LIMIT || player2Score >= SCORE_LIMIT) {
-            finishGame("Score Limit Reached");
+            finishGame("Scoref Limit Reached");
+        }
+    }
+
+    /**
+     * picks a random position in one half of the rink and spawns a new powerup there
+     * pre:  rink is initialized; random is ready
+     * post: currentPowerup is set to a new active powerup and the rink shows its icon
+     */
+    private void spawnPowerup() {
+        int rinkCenterX = RINK_X + RINK_WIDTH / 2;
+
+        int half = random.nextInt(2);
+        int owner;
+        int spawnMinX;
+        int spawnMaxX;
+
+        if (half == 0) {
+            owner     = 1;
+            spawnMinX = RINK_X + 80;
+            spawnMaxX = rinkCenterX - Powerup.RADIUS;
+        } else {
+            owner     = 2;
+            spawnMinX = rinkCenterX + Powerup.RADIUS;
+            spawnMaxX = RINK_X + RINK_WIDTH - 80;
+        }
+
+        int spawnMinY = RINK_Y + 20;
+        int spawnMaxY = RINK_Y + RINK_HEIGHT - 20;
+
+        int cx = spawnMinX + random.nextInt(spawnMaxX - spawnMinX + 1);
+        int cy = spawnMinY + random.nextInt(spawnMaxY - spawnMinY + 1);
+
+        currentPowerup = new Powerup(cx, cy, owner, System.currentTimeMillis());
+        rink.setPowerupPosition(cx, cy);
+    }
+
+    /**
+     * manages the full powerup lifecycle each frame: spawning, expiry, collection, and effect revert
+     * pre:  puck, playerPaddle, opponentPaddle, and rink all exist
+     * post: grow effects that have expired are reverted; a new powerup spawns after the cooldown;
+     *       a powerup that times out is removed; a powerup touched by the puck is collected and
+     *       the owner's paddle grows
+     */
+    private void handlePowerup() {
+        long now = System.currentTimeMillis();
+
+        // revert player 1's paddle if the grow effect has run out
+        if (player1Grown) {
+            if (now - player1GrowStart >= Powerup.EFFECT_MS) {
+                playerPaddle.revert();
+                player1Grown = false;
+            }
+        }
+
+        // revert player 2's paddle if the grow effect has run out
+        if (player2Grown) {
+            if (now - player2GrowStart >= Powerup.EFFECT_MS) {
+                opponentPaddle.revert();
+                player2Grown = false;
+            }
+        }
+
+        // spawn a new powerup once the cooldown has passed and none is on the field
+        if (currentPowerup == null) {
+            if (now - lastPowerupEndTime >= Powerup.RESPAWN_MS) {
+                spawnPowerup();
+            }
+            return;
+        }
+
+        // remove the powerup if it ran out of field time without being collected
+        currentPowerup.checkExpiry(now);
+        if (currentPowerup.isActive() == false && currentPowerup.isCollected() == false) {
+            rink.clearPowerup();
+            lastPowerupEndTime = now;
+            currentPowerup = null;
+            return;
+        }
+
+        // circle-circle collision: check if the puck center is within pickup range
+        int dx = puck.getCenterX() - currentPowerup.getCenterX();
+        int dy = puck.getCenterY() - currentPowerup.getCenterY();
+        double dist = Math.hypot(dx, dy);
+
+        if (dist < puck.getRadius() + Powerup.RADIUS) {
+            currentPowerup.collect();
+            rink.clearPowerup();
+            lastPowerupEndTime = now;
+
+            if (currentPowerup.getOwnerPlayer() == 1) {
+                playerPaddle.grow();
+                player1Grown     = true;
+                player1GrowStart = now;
+            } else {
+                opponentPaddle.grow();
+                player2Grown     = true;
+                player2GrowStart = now;
+            }
+
+            currentPowerup = null;
         }
     }
 
