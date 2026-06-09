@@ -22,6 +22,15 @@ public class AirHockeyApp {
 
     /**
      * pre:  none
+     * post: a new HomeScreen is created without music (used when quitting mid-game)
+     */
+    public static void showHomeQuiet() {
+        HomeScreen home = new HomeScreen();
+        home.setVisible(true);
+    }
+
+    /**
+     * pre:  none
      * post: a new AirHockeyGame window is created, shown, and started
      */
     public static void launchGame() {

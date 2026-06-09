@@ -47,6 +47,7 @@ public abstract class Game extends JFrame {
 	private int timeRemainingSeconds = 0;
 	private long timerStartMillis = 0;
 	private boolean timerStarted = false;
+	private long pauseStartMillis = 0;
 //we customized this code- it was ZXNM, but we needed WASD and arrow keys. so we changed ZXNM to WASD + arrows.
 	private boolean wPressed = false;
 private boolean aPressed = false;
@@ -423,6 +424,28 @@ public boolean RightKeyPressed() {
 	 */
 	public void stopGame() {
 		_t.stop();
+	}
+
+	/**
+	 * Pauses the game loop and freezes the countdown timer.
+	 */
+	public void pauseGame() {
+		if (_t.isRunning()) {
+			pauseStartMillis = System.currentTimeMillis();
+			_t.stop();
+		}
+	}
+
+	/**
+	 * Resumes the game loop; shifts the countdown forward by the time spent
+	 * paused so no match time is lost.
+	 */
+	public void resumeGame() {
+		if (!_t.isRunning() && pauseStartMillis > 0) {
+			timerStartMillis += System.currentTimeMillis() - pauseStartMillis;
+			pauseStartMillis = 0;
+			_t.start();
+		}
 	}
 
 	/**

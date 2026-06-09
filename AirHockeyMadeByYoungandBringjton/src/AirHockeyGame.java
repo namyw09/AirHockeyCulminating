@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
-
 import framework.Game;
 
 // brighton ng + youngwoo nam - ics3u culminating
@@ -102,6 +101,10 @@ public class AirHockeyGame extends Game {
         add(rink);
 
         lastPowerupEndTime = System.currentTimeMillis();
+
+        PauseButton pauseBtn = new PauseButton(WINDOW_WIDTH - 110, 8, () -> showPauseDialog());
+        add(pauseBtn);
+        getContentPane().setComponentZOrder(pauseBtn, 0);
     }
 
     /**
@@ -165,6 +168,33 @@ public class AirHockeyGame extends Game {
     private void updateScoreboard() {
         if (rink != null) {
             rink.setScoreboard(player1Score, player2Score, getFormattedTimeRemaining());
+        }
+    }
+
+    /**
+     * pre:  game is running
+     * post: game is paused and a dialog with Continue / Quit is shown;
+     *       Continue resumes, Quit returns to the home screen without music
+     */
+    private void showPauseDialog() {
+        pauseGame();
+
+        Object[] options = { "Continue", "Quit to Menu" };
+        int choice = JOptionPane.showOptionDialog(
+                this,
+                "The game is paused.",
+                "Paused",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice == 0 || choice == JOptionPane.CLOSED_OPTION) {
+            resumeGame();
+        } else {
+            dispose();
+            AirHockeyApp.showHomeQuiet();
         }
     }
 
