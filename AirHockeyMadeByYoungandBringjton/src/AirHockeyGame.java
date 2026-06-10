@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
-
 import framework.Game;
 
 // brighton ng + youngwoo nam - ics3u culminating
@@ -102,6 +101,10 @@ public class AirHockeyGame extends Game {
         add(rink);
 
         lastPowerupEndTime = System.currentTimeMillis();
+
+        PauseButton pauseBtn = new PauseButton(WINDOW_WIDTH - 110, 8, () -> showPauseDialog());
+        add(pauseBtn);
+        getContentPane().setComponentZOrder(pauseBtn, 0);
     }
 
     /**
@@ -133,19 +136,28 @@ public class AirHockeyGame extends Game {
     }
 
     /**
-     * asks for a player name and uses the default if nothing is typed
-     * pre:  the prompt message and backup name are ready
-     * post: a usable player name is returned
+     * pre:  message is a valid prompt string
+     * post: returns a non-empty name; loops until the player types one
      */
     private String promptForName(String message, String defaultName) {
-        String name = JOptionPane.showInputDialog(this,
-                message, "Player Names", JOptionPane.PLAIN_MESSAGE);
+        String name = "";
 
-        if (name == null || name.equals("")) {
-            return defaultName;
+        while (name.trim().isEmpty()) {
+            name = JOptionPane.showInputDialog(this,
+                    message, "Player Names", JOptionPane.PLAIN_MESSAGE);
+
+            if (name == null) {
+                name = "";
+            }
+
+            if (name.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "A name is required to continue. Please enter a name.",
+                        "Name Required", JOptionPane.WARNING_MESSAGE);
+            }
         }
 
-        return name;
+        return name.trim();
     }
 
     /**
@@ -156,6 +168,34 @@ public class AirHockeyGame extends Game {
     private void updateScoreboard() {
         if (rink != null) {
             rink.setScoreboard(player1Score, player2Score, getFormattedTimeRemaining());
+        }
+    }
+
+    /**
+     * pre:  game is running
+     * post: game is paused and a dialog with Continue / Quit is shown;
+     *       Continue resumes, Quit returns to the home screen without music
+     */
+    private void showPauseDialog() {
+        pauseGame();
+
+        Object[] options = { "Continue", "Quit to Menu" };
+        int choice = JOptionPane.showOptionDialog(
+                this,
+                "The game is paused.",
+                "Paused",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice == 0 || choice == JOptionPane.CLOSED_OPTION) {
+            resumeGame();
+        } else {
+            MusicPlayer.stop();
+            dispose();
+            AirHockeyApp.showHomeQuiet();
         }
     }
 
