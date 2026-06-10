@@ -22,6 +22,7 @@ public class Rink extends GameObject {
     private int player2Score = 0;
     private String timeText = "01:30";
 
+
     /**
      * creates the rink background and saves the player labels
      * pre:  dimensions are positive and player names are not null
@@ -94,22 +95,67 @@ public class Rink extends GameObject {
         g.setColor(new Color(100, 140, 180));
         g.drawLine(centerX, rinkY, centerX, rinkY + rinkHeight);
 
-        // center the scoreboard so longer names still look okay
-        String scoreboard = player1Name + " " + player1Score
-                + "   " + timeText + "   "
-                + player2Name + " " + player2Score;
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("SansSerif", Font.BOLD, 22));
-        FontMetrics metrics = g.getFontMetrics();
-        g.drawString(scoreboard, (windowWidth - metrics.stringWidth(scoreboard)) / 2, 50);
+        drawTimer(g);
+        drawPlayerScores(g);
 
-        // control labels above each side of the rink
+        // control labels at the bottom of the header strip, one per side
         g.setColor(new Color(100, 150, 230));
-        g.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        g.drawString(player1Name + " (W/A/S/D)", rinkX + 10, rinkY - 10);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        g.drawString(player1Name + " (W/A/S/D)", rinkX + 10, rinkY - 6);
 
         g.setColor(new Color(220, 100, 100));
-        g.drawString(player2Name + " (Arrows)", rinkX + rinkWidth - 120, rinkY - 10);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        FontMetrics lm = g.getFontMetrics();
+        g.drawString(player2Name + " (Arrows)",
+                rinkX + rinkWidth - lm.stringWidth(player2Name + " (Arrows)") - 10, rinkY - 6);
+    }
+
+    /**
+     * draws the retro timer: timeText in a monospaced font centered horizontally in the header,
+     * surrounded by a white rectangle
+     * pre:  timeText is not null; rinkY defines the available header height
+     * post: a filled rectangle with a white border and retro monospaced time text is painted
+     *       at the horizontal center of the window, vertically centered in the header strip
+     */
+    private void drawTimer(Graphics g) {
+        g.setFont(new Font("Monospaced", Font.BOLD, 28));
+        FontMetrics fm = g.getFontMetrics();
+        int padX  = 14;
+        int padY  = 7;
+        int boxW  = fm.stringWidth(timeText) + padX * 2;
+        int boxH  = fm.getAscent() + padY * 2;
+        int boxX  = (windowWidth - boxW) / 2;
+        int boxY  = (rinkY - boxH) / 2;
+
+        // dark fill so the border reads clearly against the background
+        g.setColor(new Color(10, 15, 25));
+        g.fillRect(boxX, boxY, boxW, boxH);
+
+        g.setColor(Color.WHITE);
+        g.drawRect(boxX, boxY, boxW, boxH);
+        g.drawString(timeText, boxX + padX, boxY + padY + fm.getAscent() - 2);
+    }
+
+    /**
+     * draws each player's current score above their control label on their side of the header
+     * pre:  player1Score and player2Score are set; rinkX, rinkY, rinkWidth are defined
+     * post: player 1's score in blue is drawn above the left label; player 2's score in red is
+     *       drawn above the right label, right-aligned to the label's right edge
+     */
+    private void drawPlayerScores(Graphics g) {
+        g.setFont(new Font("SansSerif", Font.BOLD, 22));
+        FontMetrics fm = g.getFontMetrics();
+        int scoreY = rinkY - 24;
+
+        // player 1 - left side, aligned with the label's left edge
+        g.setColor(new Color(100, 150, 230));
+        g.drawString(String.valueOf(player1Score), rinkX + 10, scoreY);
+
+        // player 2 - right side, right-aligned to match the label's right edge
+        g.setColor(new Color(220, 100, 100));
+        String s2       = String.valueOf(player2Score);
+        int labelRight  = rinkX + rinkWidth - 10;
+        g.drawString(s2, labelRight - fm.stringWidth(s2), scoreY);
     }
 
     /**
