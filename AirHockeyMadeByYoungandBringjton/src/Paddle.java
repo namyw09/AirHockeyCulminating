@@ -64,7 +64,7 @@ public class Paddle extends GameObject {
      */
     public void grow() {
         int centerY = getY() + getHeight() / 2;
-        setSize(PADDLE_WIDTH, PADDLE_HEIGHT * 2);
+        setSize(PADDLE_WIDTH, PADDLE_HEIGHT * 3 / 2);
         setY(centerY - getHeight() / 2);
         repaint();
     }
@@ -85,7 +85,7 @@ public class Paddle extends GameObject {
      * post: currentSpeed is doubled; paddle moves 2x faster until revertSpeed() is called
      */
     public void speedUp() {
-        currentSpeed = SPEED * 2;
+        currentSpeed = SPEED * 3 / 2; // 1.5x (int: 5 * 3/2 = 7)
     }
 
     /**
@@ -93,7 +93,7 @@ public class Paddle extends GameObject {
      * post: currentSpeed is halved; paddle moves at half speed until revertSpeed() is called
      */
     public void slowDown() {
-        currentSpeed = Math.max(1, SPEED / 2);
+        currentSpeed = SPEED * 3 / 4; // 0.75x (int: 5 * 3/4 = 3)
     }
 
     /**

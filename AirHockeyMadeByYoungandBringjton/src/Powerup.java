@@ -9,7 +9,7 @@ import framework.GameObject;
 public class Powerup extends GameObject {
 
     public static final int RADIUS        = 18;
-    public static final int FIELD_LIVE_MS = 2000; // ms the icon stays on the field
+    public static final int FIELD_LIVE_MS = 5000; // ms the icon stays on the field
     public static final int EFFECT_MS     = 5000; // ms the paddle effect lasts after collection
     public static final int RESPAWN_MS    = 6000; // ms to wait before the next spawn
 
@@ -38,9 +38,10 @@ public class Powerup extends GameObject {
         active      = true;
         collected   = false;
 
-        setSize(RADIUS * 2, RADIUS * 2);
-        setX(cx - RADIUS);
-        setY(cy - RADIUS);
+        // component is padded 4px each side so the glow ring is not clipped
+        setSize(RADIUS * 2 + 8, RADIUS * 2 + 8);
+        setX(cx - RADIUS - 4);
+        setY(cy - RADIUS - 4);
     }
 
     /**
@@ -48,7 +49,7 @@ public class Powerup extends GameObject {
      * post: returns the horizontal center of the powerup icon on screen
      */
     public int getCenterX() {
-        return getX() + RADIUS;
+        return getX() + RADIUS + 4;
     }
 
     /**
@@ -56,7 +57,7 @@ public class Powerup extends GameObject {
      * post: returns the vertical center of the powerup icon on screen
      */
     public int getCenterY() {
-        return getY() + RADIUS;
+        return getY() + RADIUS + 4;
     }
 
     /**
@@ -123,8 +124,9 @@ public class Powerup extends GameObject {
      *       gold "2x" for size, cyan ">>" for speed, orange "<<" for slow opponent
      */
     public void paint(Graphics g) {
-        int cx = RADIUS;
-        int cy = RADIUS;
+        // center within the padded component (RADIUS + 4px glow padding each side)
+        int cx = RADIUS + 4;
+        int cy = RADIUS + 4;
         int r  = RADIUS;
 
         // pick fill color, glow color, and label based on type
@@ -144,7 +146,7 @@ public class Powerup extends GameObject {
             // TYPE_SIZE
             fillColor = new Color(255, 200, 0);
             glowColor = new Color(255, 220, 50, 120);
-            label     = "2x";
+            label     = "1.5x";
         }
 
         // soft glow ring

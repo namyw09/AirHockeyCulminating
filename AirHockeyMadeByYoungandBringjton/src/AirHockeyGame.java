@@ -1,4 +1,8 @@
 import java.awt.Color;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
@@ -181,6 +185,31 @@ public class AirHockeyGame extends Game {
                 result + "\nFinal Score: " + player1Name + " " + player1Score
                         + " - " + player2Score + " " + player2Name,
                 reason, JOptionPane.INFORMATION_MESSAGE);
+
+        saveMatchResult(result);
+        dispose();
+        AirHockeyApp.showHome();
+    }
+
+    /**
+     * pre:  player names and scores are set; result is the outcome string
+     * post: one line is appended to match_history.txt with the date, names,
+     *       score, and winner; silently does nothing if the file cannot be written
+     */
+    private void saveMatchResult(String result) {
+        try {
+            String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date());
+            String line = "[" + date + "]  "
+                    + player1Name + " " + player1Score
+                    + "  -  "
+                    + player2Score + " " + player2Name
+                    + "   ->   " + result;
+            FileWriter fw = new FileWriter("match_history.txt", true);
+            fw.write(line + "\n");
+            fw.close();
+        } catch (IOException e) {
+            // match history is non-critical; ignore write failures
+        }
     }
 
     /**
@@ -295,7 +324,7 @@ public class AirHockeyGame extends Game {
     /**
      * picks a random position in one half of the rink and spawns a new powerup there
      * pre:  rink is initialized; random is ready
-     * post: currentPowerup is set to a new active powerup and the rink shows its icon
+     * post: currentPowerup is set to a new active powerup and added to the game above the rink layer
      */
     private void spawnPowerup() {
         int rinkCenterX = RINK_X + RINK_WIDTH / 2;
@@ -385,7 +414,9 @@ public class AirHockeyGame extends Game {
             return;
         }
 
-        if (puck.collides(currentPowerup)) {
+        if (puck.collides(currentPowerup)
+                || playerPaddle.collides(currentPowerup)
+                || opponentPaddle.collides(currentPowerup)) {
             int owner = currentPowerup.getOwnerPlayer();
             int type  = currentPowerup.getType();
 
@@ -405,13 +436,23 @@ public class AirHockeyGame extends Game {
 
             } else if (type == Powerup.TYPE_SPEED) {
                 ownerPaddle.speedUp();
-                if (owner == 1) { playerPaddleSpeedy   = true; playerSpeedyStart   = now; }
-                else            { opponentPaddleSpeedy = true; opponentSpeedyStart = now; }
+                if (owner == 1) {
+                    playerPaddleSpeedy = true;  playerSpeedyStart  = now;
+                    playerPaddleSlowed = false; // cancel any slow on the same paddle
+                } else {
+                    opponentPaddleSpeedy = true;  opponentSpeedyStart  = now;
+                    opponentPaddleSlowed = false;
+                }
 
             } else if (type == Powerup.TYPE_SLOW) {
                 targetPaddle.slowDown();
-                if (owner == 1) { opponentPaddleSlowed = true; opponentSlowedStart = now; }
-                else            { playerPaddleSlowed   = true; playerSlowedStart   = now; }
+                if (owner == 1) {
+                    opponentPaddleSlowed = true;  opponentSlowedStart  = now;
+                    opponentPaddleSpeedy = false; // cancel any speed on the same paddle
+                } else {
+                    playerPaddleSlowed = true;  playerSlowedStart  = now;
+                    playerPaddleSpeedy = false;
+                }
             }
         }
     }
