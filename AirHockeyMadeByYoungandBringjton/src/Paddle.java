@@ -6,12 +6,17 @@ import framework.GameObject;
 // one paddle for one player - moves around their half of the rink
 public class Paddle extends GameObject {
 
-    private static final int PADDLE_WIDTH  = 16;
-    private static final int PADDLE_HEIGHT = 80;
-    private static final int SPEED = 5;
+    private static final int   PADDLE_WIDTH  = 16;
+    private static final int   PADDLE_HEIGHT = 80;
+    private static final int   SPEED         = 5;
+    private static final float ACCEL         = 1.2f;  // pixels/frame added when key is held
+    private static final float DECEL         = 0.75f; // velocity multiplier when key is released
 
     private Color paddleColor;
-    private int currentSpeed = SPEED;
+    private int   currentSpeed = SPEED;
+
+    private float velX = 0f;
+    private float velY = 0f;
 
     /**
      * pre:  centerX and centerY are valid positions on screen, color is not null
@@ -26,31 +31,49 @@ public class Paddle extends GameObject {
 
     /**
      * pre:  minX, maxX, minY, maxY define the area the paddle is allowed to move in
-     * post: paddle moves in the direction of any held keys, and stays within the given bounds
+     * post: velocity ramps toward the pressed direction and coasts to a stop when
+     *       released; paddle stays within the given bounds
      */
     public void move(boolean up, boolean down, boolean left, boolean right,
             int minX, int maxX, int minY, int maxY) {
 
-        int centerX = getX() + PADDLE_WIDTH / 2;
-        int centerY = getY() + getHeight() / 2;
+        // accelerate or decelerate on the X axis
+        if (left && !right) {
+            velX = Math.max(velX - ACCEL, -currentSpeed);
+        } else if (right && !left) {
+            velX = Math.min(velX + ACCEL, currentSpeed);
+        } else {
+            velX *= DECEL;
+        }
 
-        if (up)    { centerY = centerY - currentSpeed; }
-        if (down)  { centerY = centerY + currentSpeed; }
-        if (left)  { centerX = centerX - currentSpeed; }
-        if (right) { centerX = centerX + currentSpeed; }
+        // accelerate or decelerate on the Y axis
+        if (up && !down) {
+            velY = Math.max(velY - ACCEL, -currentSpeed);
+        } else if (down && !up) {
+            velY = Math.min(velY + ACCEL, currentSpeed);
+        } else {
+            velY *= DECEL;
+        }
+
+        int centerX = getX() + PADDLE_WIDTH / 2 + (int) velX;
+        int centerY = getY() + getHeight() / 2 + (int) velY;
 
         // keep the paddle inside its allowed area
         if (centerX - PADDLE_WIDTH / 2 < minX) {
             centerX = minX + PADDLE_WIDTH / 2;
+            velX = 0;
         }
         if (centerX + PADDLE_WIDTH / 2 > maxX) {
             centerX = maxX - PADDLE_WIDTH / 2;
+            velX = 0;
         }
         if (centerY - getHeight() / 2 < minY) {
             centerY = minY + getHeight() / 2;
+            velY = 0;
         }
         if (centerY + getHeight() / 2 > maxY) {
             centerY = maxY - getHeight() / 2;
+            velY = 0;
         }
 
         setX(centerX - PADDLE_WIDTH / 2);
@@ -58,9 +81,19 @@ public class Paddle extends GameObject {
         repaint();
     }
 
+    // post: returns current horizontal velocity in pixels/frame (for puck collision math)
+    public int getVelocityX() {
+        return (int) velX;
+    }
+
+    // post: returns current vertical velocity in pixels/frame (for puck collision math)
+    public int getVelocityY() {
+        return (int) velY;
+    }
+
     /**
      * pre:  paddle is on screen
-     * post: paddle height doubles to PADDLE_HEIGHT * 2; vertical center is preserved
+     * post: paddle height grows to 1.5x; vertical center is preserved
      */
     public void grow() {
         int centerY = getY() + getHeight() / 2;
@@ -82,18 +115,18 @@ public class Paddle extends GameObject {
 
     /**
      * pre:  paddle exists
-     * post: currentSpeed is doubled; paddle moves 2x faster until revertSpeed() is called
+     * post: currentSpeed is set to 1.5x normal; paddle moves faster until revertSpeed()
      */
     public void speedUp() {
-        currentSpeed = SPEED * 3 / 2; // 1.5x (int: 5 * 3/2 = 7)
+        currentSpeed = SPEED * 3 / 2;
     }
 
     /**
      * pre:  paddle exists
-     * post: currentSpeed is halved; paddle moves at half speed until revertSpeed() is called
+     * post: currentSpeed is set to 0.75x normal; paddle moves slower until revertSpeed()
      */
     public void slowDown() {
-        currentSpeed = SPEED * 3 / 4; // 0.75x (int: 5 * 3/4 = 3)
+        currentSpeed = SPEED * 3 / 4;
     }
 
     /**

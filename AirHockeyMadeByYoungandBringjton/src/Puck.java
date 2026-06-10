@@ -6,18 +6,19 @@ import framework.GameObject;
 // the puck - moves around and bounces off walls and paddles
 public class Puck extends GameObject {
 
-    private static final int RADIUS = 14;
-    private static final int DIAMETER = RADIUS * 2;
-    private static final int SPEED = 9;
+    private static final int   RADIUS   = 14;
+    private static final int   DIAMETER = RADIUS * 2;
+    private static final float SPEED    = 9f;
+    private static final float FRICTION = 0.999f; // applied every frame; slows puck very gradually
+    private static final float MAX_SPEED = 18f;   // cap so a hard paddle hit stays playable
 
-    int xSpeed = SPEED;
-    int ySpeed = 3;
+    float xSpeed = SPEED;
+    float ySpeed = 3f;
 
     // pre:  centerX and centerY are valid positions inside the rink
     // post: puck is created and placed so its center is at (centerX, centerY)
     public Puck(int centerX, int centerY) {
         setSize(DIAMETER, DIAMETER);
-        // the framework positions things by top-left corner, so we shift by radius
         setX(centerX - RADIUS);
         setY(centerY - RADIUS);
     }
@@ -39,10 +40,32 @@ public class Puck extends GameObject {
         return RADIUS;
     }
 
-    // pre:  puck is overlapping the given paddle
-    // post: xSpeed is flipped, puck is pushed outside the paddle so it doesn't get stuck
+    // post: returns current horizontal speed (for tests)
+    float getXSpeed() {
+        return xSpeed;
+    }
+
+    // post: returns current vertical speed (for tests)
+    float getYSpeed() {
+        return ySpeed;
+    }
+
+    /**
+     * pre:  puck is overlapping the given paddle
+     * post: xSpeed is reversed and adjusted by half the paddle's velocity;
+     *       combined speed is clamped to MAX_SPEED; puck is pushed outside the paddle
+     */
     public void hitByPaddle(Paddle paddle) {
-        xSpeed = -xSpeed;
+        xSpeed = -xSpeed + paddle.getVelocityX() * 0.5f;
+        ySpeed =  ySpeed + paddle.getVelocityY() * 0.5f;
+
+        // clamp to MAX_SPEED while preserving direction
+        if (Math.abs(xSpeed) > MAX_SPEED) {
+            xSpeed = MAX_SPEED * Math.signum(xSpeed);
+        }
+        if (Math.abs(ySpeed) > MAX_SPEED) {
+            ySpeed = MAX_SPEED * Math.signum(ySpeed);
+        }
 
         if (xSpeed > 0) {
             setX(paddle.getX() + paddle.getWidth() + 1);
@@ -63,10 +86,16 @@ public class Puck extends GameObject {
         ySpeed = -ySpeed;
     }
 
-    // post: puck's position is updated by adding xSpeed and ySpeed
+    /**
+     * pre:  none
+     * post: puck position advances by its current velocity; friction is applied so
+     *       speed decays slightly each frame after a hard hit
+     */
     public void update() {
-        setX(getX() + xSpeed);
-        setY(getY() + ySpeed);
+        xSpeed *= FRICTION;
+        ySpeed *= FRICTION;
+        setX(getX() + (int) Math.round(xSpeed));
+        setY(getY() + (int) Math.round(ySpeed));
         repaint();
     }
 
@@ -76,7 +105,7 @@ public class Puck extends GameObject {
         setX(centerX - RADIUS);
         setY(centerY - RADIUS);
         xSpeed = SPEED * direction;
-        ySpeed = 3;
+        ySpeed = 3f;
         repaint();
     }
 
