@@ -160,7 +160,7 @@ public class MusicPlayer {
     /**
      * finds the normal menu theme file
      * pre:  none
-     * post: returns the theme.mp3 file located next to the bin directory,
+     * post: returns the theme.mp3 file located in the project audio assets,
      *       or null if the location cannot be resolved
      */
     public static File findThemeFile() {
@@ -170,7 +170,7 @@ public class MusicPlayer {
                                  .getCodeSource()
                                  .getLocation()
                                  .toURI());
-            return new File(binDir.getParentFile(), "theme.mp3");
+            return new File(binDir.getParentFile(), "assets/audio/theme.mp3");
         } catch (URISyntaxException e) {
             return null;
         }
