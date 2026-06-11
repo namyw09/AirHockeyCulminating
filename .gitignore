@@ -1,6 +1,6 @@
 # Java build output
 *.class
-AirHockeyMadeByYoungandBringjton/bin/
+bin/
 
 # IDE and editor local state
 .vscode/
@@ -17,6 +17,6 @@ __CREATED_BY_JAVA_LANGUAGE_SERVER__/
 *.swp
 
 # YOLO local training artifacts
-AirHockeyMadeByYoungandBringjton/yolo/*.zip
-AirHockeyMadeByYoungandBringjton/yolo/**/__pycache__/
-AirHockeyMadeByYoungandBringjton/yolo/**/candy_result.txt
+yolo/*.zip
+yolo/**/__pycache__/
+yolo/**/candy_result.txt

@@ -6,11 +6,11 @@ This is an Eclipse-style Java Swing air hockey game. It uses only the JDK standa
 
 ## Important Paths
 
-- Main class: `AirHockeyMadeByYoungandBringjton/src/AirHockeyApp.java`
-- Main game logic: `AirHockeyMadeByYoungandBringjton/src/AirHockeyGame.java`
-- Game objects: `AirHockeyMadeByYoungandBringjton/src/Paddle.java`, `Puck.java`, and `Rink.java`
-- Framework code: `AirHockeyMadeByYoungandBringjton/src/framework/Game.java` and `GameObject.java`
-- Generated output: `AirHockeyMadeByYoungandBringjton/bin`
+- Main class: `src/AirHockeyApp.java`
+- Main game logic: `src/AirHockeyGame.java`
+- Game objects: `src/Paddle.java`, `Puck.java`, and `Rink.java`
+- Framework code: `src/framework/Game.java` and `GameObject.java`
+- Generated output: `bin`
 - Original project archive: `AirhockeyYoungBrighton.zip`
 
 ## How The Code Works
@@ -26,14 +26,14 @@ This is an Eclipse-style Java Swing air hockey game. It uses only the JDK standa
 Compile:
 
 ```sh
-mkdir -p AirHockeyMadeByYoungandBringjton/bin
-javac -d AirHockeyMadeByYoungandBringjton/bin $(find AirHockeyMadeByYoungandBringjton/src -name '*.java')
+mkdir -p bin
+javac -d bin $(find src -name '*.java')
 ```
 
 Run:
 
 ```sh
-java -cp AirHockeyMadeByYoungandBringjton/bin AirHockeyApp
+java -cp bin AirHockeyApp
 ```
 
 ## Change Guidance
