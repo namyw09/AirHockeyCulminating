@@ -25,6 +25,7 @@ public class Powerup extends GameObject {
     private boolean collected;
 
     /**
+     * creates a powerup token
      * pre:  cx and cy are valid center coordinates inside the rink,
      *       owner is 1 or 2, powerupType is TYPE_SIZE/TYPE_SPEED/TYPE_SLOW,
      *       spawnMillis is System.currentTimeMillis()
@@ -45,6 +46,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * gets the powerup center x position
      * pre:  powerup exists
      * post: returns the horizontal center of the powerup icon on screen
      */
@@ -53,6 +55,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * gets the powerup center y position
      * pre:  powerup exists
      * post: returns the vertical center of the powerup icon on screen
      */
@@ -61,6 +64,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * gets the player who benefits from this powerup
      * pre:  powerup exists
      * post: returns 1 if this powerup benefits player 1, 2 if it benefits player 2
      */
@@ -69,6 +73,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * gets the powerup effect type
      * pre:  powerup exists
      * post: returns the type constant (TYPE_SIZE, TYPE_SPEED, or TYPE_SLOW)
      */
@@ -77,6 +82,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * checks whether the powerup is still active
      * pre:  powerup exists
      * post: returns true if the icon is still on the field and has not been collected
      */
@@ -85,6 +91,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * checks whether the powerup has been collected
      * pre:  powerup exists
      * post: returns true if the puck has already picked up this powerup
      */
@@ -93,6 +100,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * expires old powerups
      * pre:  nowMillis is the current wall-clock time from System.currentTimeMillis()
      * post: if FIELD_LIVE_MS has passed since spawn and the powerup was not collected,
      *       active is set to false; otherwise no change
@@ -106,6 +114,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * marks the powerup as collected
      * pre:  powerup is active and on the field
      * post: collected and active are both set so the icon is removed from play
      */
@@ -119,6 +128,7 @@ public class Powerup extends GameObject {
     }
 
     /**
+     * draws the powerup icon
      * pre:  g is a valid Graphics object
      * post: the powerup icon is drawn in the component's local coordinate space:
      *       gold "2x" for size, cyan ">>" for speed, orange "<<" for slow opponent

@@ -17,6 +17,7 @@ public class PauseButton extends GameObject {
     private boolean  hovered = false;
 
     /**
+     * creates the pause button and click handler
      * pre:  onClick is not null
      * post: button is sized, positioned, and wired to call onClick when clicked
      */
@@ -43,6 +44,7 @@ public class PauseButton extends GameObject {
     }
 
     /**
+     * draws the pause button
      * pre:  g is a valid Graphics object
      * post: button is drawn as a rounded rectangle with centered PAUSE text;
      *       background lightens when the mouse hovers over it
@@ -61,6 +63,7 @@ public class PauseButton extends GameObject {
     }
 
     /**
+     * leaves the pause button still each frame
      * pre:  none
      * post: nothing - the button has no per-frame behavior
      */

@@ -4,6 +4,7 @@ import java.awt.Color;
 public class CursorControlledPaddle extends Paddle {
 
     /**
+     * creates a paddle that can follow the cursor
      * pre:  centerX and centerY are valid positions on screen, color is not null
      * post: cursor controlled paddle is created like a normal paddle
      */
@@ -12,6 +13,7 @@ public class CursorControlledPaddle extends Paddle {
     }
 
     /**
+     * moves the paddle center to the cursor position
      * pre:  minX, maxX, minY, maxY define the allowed rink area
      * post: paddle center follows the cursor but stays inside the allowed area
      */

@@ -14,6 +14,7 @@ public class CandyBattle {
     private static String lastError = "";
 
     /**
+     * runs the python candy battle and reads the winner
      * runs the candy battle and returns which player won
      * pre:  the python env, script, model, and a working USB camera are available
      * post: returns 1 if Player 1 won, 2 if Player 2 won, or 0 if there is no
@@ -29,15 +30,9 @@ public class CandyBattle {
                 resultFile.delete();
             }
 
-            String[] cameraSources = { "usb0", "usb1" };
-            for (int i = 0; i < cameraSources.length; i++) {
-                String output = runPythonBattle(cameraSources[i]);
-
-                if (output.indexOf("ERROR: could not open camera") == -1) {
-                    return readWinner(resultFile);
-                }
-
-                lastError = "Could not open camera source " + cameraSources[i] + ".";
+            String output = runPythonBattle("usb0");
+            if (output.indexOf("ERROR: could not open camera") == -1) {
+                return readWinner(resultFile);
             }
 
             lastError = "Could not open camera. Check macOS Camera permission for the app that launched the game.";
@@ -50,6 +45,7 @@ public class CandyBattle {
     }
 
     /**
+     * launches the python battle for one camera source
      * pre:  source is a camera source understood by candy_battle.py
      * post: python battle has run once; combined output is printed and returned
      */
@@ -79,6 +75,7 @@ public class CandyBattle {
     }
 
     /**
+     * gets the most recent camera or script error
      * post: returns the last camera/script error, or an empty string if there was none
      */
     public static String getLastError() {
@@ -86,6 +83,7 @@ public class CandyBattle {
     }
 
     /**
+     * reads the winner value from the result file
      * pre:  resultFile may or may not exist
      * post: returns the integer after "winner=" in the file, or 0 if it is
      *       missing or cannot be parsed

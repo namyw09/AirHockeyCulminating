@@ -3,6 +3,7 @@
 public class AirHockeyApp {
 
     /**
+     * starts the app at the home screen
      * pre:  none
      * post: the home screen is shown; the game launches when Play is pressed
      */
@@ -11,6 +12,7 @@ public class AirHockeyApp {
     }
 
     /**
+     * opens the home screen with menu music
      * pre:  none
      * post: a new HomeScreen is created, music plays, and the window is shown
      */
@@ -21,6 +23,7 @@ public class AirHockeyApp {
     }
 
     /**
+     * opens the home screen without starting music
      * pre:  none
      * post: a new HomeScreen is created without music (used when quitting mid-game)
      */
@@ -30,6 +33,7 @@ public class AirHockeyApp {
     }
 
     /**
+     * creates and starts a new air hockey match
      * pre:  none
      * post: a new AirHockeyGame window is created, shown, and started
      */

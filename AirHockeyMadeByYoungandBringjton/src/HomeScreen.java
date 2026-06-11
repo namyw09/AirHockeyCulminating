@@ -24,6 +24,7 @@ public class HomeScreen extends JFrame {
     private static final int HEIGHT = 600;
 
     /**
+     * builds the main menu window
      * pre:  none
      * post: the home screen window is fully built and ready to be shown;
      *       buttons are wired to their actions
@@ -84,6 +85,7 @@ public class HomeScreen extends JFrame {
     }
 
     /**
+     * creates one styled menu button
      * pre:  text and bg are not null
      * post: returns a styled JButton with the game's dark theme and hover cursor
      */
@@ -100,6 +102,7 @@ public class HomeScreen extends JFrame {
     }
 
     /**
+     * draws the menu background
      * pre:  g is a valid Graphics object
      * post: a decorative rink outline is drawn behind the menu content
      */
@@ -119,6 +122,7 @@ public class HomeScreen extends JFrame {
     }
 
     /**
+     * shows the rules dialog
      * pre:  none
      * post: a dialog showing the game controls and rules is displayed
      */
@@ -139,6 +143,7 @@ public class HomeScreen extends JFrame {
     }
 
     /**
+     * shows saved match history
      * pre:  none
      * post: reads match_history.txt and displays all past results in a scrollable dialog;
      *       shows a message if no matches have been played yet

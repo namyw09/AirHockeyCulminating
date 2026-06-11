@@ -16,6 +16,7 @@ public class MusicPlayer {
     }
 
     /**
+     * starts one music file once
      * pre:  none
      * post: music starts playing from the given file; any previous playback is stopped
      */
@@ -24,6 +25,7 @@ public class MusicPlayer {
     }
 
     /**
+     * starts one music file on repeat
      * pre:  none
      * post: music loops from the given file until stop() or another track starts
      */
@@ -32,6 +34,7 @@ public class MusicPlayer {
     }
 
     /**
+     * starts music with optional looping
      * pre:  none
      * post: music starts from the given file; any previous playback is stopped
      */
@@ -61,6 +64,7 @@ public class MusicPlayer {
     }
 
     /**
+     * lowers the current music volume
      * pre:  none
      * post: a new quiet afplay process starts at volume 0.2; after 300ms the old
      *       loud process is killed so the transition has no audible gap
@@ -90,6 +94,7 @@ public class MusicPlayer {
     }
 
     /**
+     * fades out the current music
      * pre:  none
      * post: music fades out over ~1 second by restarting afplay at the current
      *       position with decreasing volume; playback stops when volume reaches zero
@@ -140,6 +145,7 @@ public class MusicPlayer {
     }
 
     /**
+     * stops the current music
      * pre:  none
      * post: music stops immediately
      */
@@ -152,6 +158,7 @@ public class MusicPlayer {
     }
 
     /**
+     * finds the normal menu theme file
      * pre:  none
      * post: returns the theme.mp3 file located next to the bin directory,
      *       or null if the location cannot be resolved
@@ -170,6 +177,7 @@ public class MusicPlayer {
     }
 
     /**
+     * finds the battle music file
      * pre:  none
      * post: returns the requested battle-stage music file, or null if missing
      */

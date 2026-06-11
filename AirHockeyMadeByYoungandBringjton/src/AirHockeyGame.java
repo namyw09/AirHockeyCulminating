@@ -23,7 +23,7 @@ public class AirHockeyGame extends Game {
     private static final int RINK_WIDTH = 700;
     private static final int RINK_HEIGHT = 440;
     private static final int GOAL_HEIGHT = 150;
-    private static final int MATCH_LENGTH_SECONDS = 90;
+    private static final int MATCH_LENGTH_SECONDS = 60;
     private static final int SCORE_LIMIT = 7;
 
     private Rink rink;
@@ -125,6 +125,7 @@ public class AirHockeyGame extends Game {
     }
 
     /**
+     * tracks the mouse for cursor-control powerups
      * pre:  content pane exists
      * post: latest mouse position is tracked in game-coordinate space
      */
@@ -180,6 +181,7 @@ public class AirHockeyGame extends Game {
     }
 
     /**
+     * asks for a player name until one is entered
      * pre:  message is a valid prompt string
      * post: returns a non-empty name; loops until the player types one
      */
@@ -216,6 +218,7 @@ public class AirHockeyGame extends Game {
     }
 
     /**
+     * shows the pause menu and handles the selected action
      * pre:  game is running
      * post: game is paused and a dialog with Continue / Test Candy Battle / Quit
      *       is shown; Continue resumes, Test Candy Battle starts the camera
@@ -248,6 +251,7 @@ public class AirHockeyGame extends Game {
     }
 
     /**
+     * runs the candy battle and applies its reward
      * pauses the match and runs the camera candy battle minigame
      * pre:  the game is running and the YOLO python script is available
      * post: the game is paused, the python minigame runs on a background thread,
@@ -298,6 +302,7 @@ public class AirHockeyGame extends Game {
     }
 
     /**
+     * gives the candy battle winner cursor control
      * grants the candy battle's special powerup to the winning player
      * pre:  player is 1 or 2
      * post: winner controls their paddle with the mouse for the rest of the match
@@ -345,6 +350,7 @@ public class AirHockeyGame extends Game {
     }
 
     /**
+     * saves the match result to history
      * pre:  player names and scores are set; result is the outcome string
      * post: one line is appended to match_history.txt with the date, names,
      *       score, and winner; silently does nothing if the file cannot be written

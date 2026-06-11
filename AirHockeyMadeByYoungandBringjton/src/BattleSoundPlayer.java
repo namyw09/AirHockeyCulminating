@@ -14,6 +14,7 @@ public class BattleSoundPlayer {
     }
 
     /**
+     * starts the item-box sound during the camera battle
      * pre:  item-box sound file exists
      * post: item-box sound loops until stop() is called
      */
@@ -43,6 +44,7 @@ public class BattleSoundPlayer {
     }
 
     /**
+     * stops the item-box battle sound
      * pre:  none
      * post: battle sound stops immediately
      */
