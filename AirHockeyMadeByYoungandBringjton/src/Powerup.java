@@ -123,7 +123,11 @@ public class Powerup extends GameObject {
         active    = false;
     }
 
-    // post: nothing - powerup has no per-frame behavior; lifecycle is managed by AirHockeyGame
+    /**
+     * leaves powerup lifecycle behavior to AirHockeyGame
+     * pre:  none
+     * post: nothing - powerup has no per-frame behavior; lifecycle is managed by AirHockeyGame
+     */
     public void act() {
     }
 
@@ -131,7 +135,7 @@ public class Powerup extends GameObject {
      * draws the powerup icon
      * pre:  g is a valid Graphics object
      * post: the powerup icon is drawn in the component's local coordinate space:
-     *       gold "2x" for size, cyan ">>" for speed, orange "<<" for slow opponent
+     *       gold "1.5x" for size, cyan arrows for speed, orange arrows for slow opponent
      */
     public void paint(Graphics g) {
         // center within the padded component (RADIUS + 4px glow padding each side)

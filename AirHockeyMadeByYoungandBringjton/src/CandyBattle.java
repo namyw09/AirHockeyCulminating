@@ -6,16 +6,12 @@ import java.io.InputStreamReader;
 // launches the Python YOLO "candy battle" minigame and reads back the winner
 public class CandyBattle {
 
-    // absolute paths to the python environment, script, model, and result file
+    // python environment used to run the YOLO candy battle script
     private static final String PYTHON = "/opt/anaconda3/envs/yolo-env1/bin/python";
-    private static final String SCRIPT = "/Users/brighton/Documents/yolo/my_model/candy_battle.py";
-    private static final String MODEL  = "/Users/brighton/Documents/yolo/my_model/my_model.pt";
-    private static final String RESULT = "/Users/brighton/Documents/yolo/my_model/candy_result.txt";
     private static String lastError = "";
 
     /**
      * runs the python candy battle and reads the winner
-     * runs the candy battle and returns which player won
      * pre:  the python env, script, model, and a working USB camera are available
      * post: returns 1 if Player 1 won, 2 if Player 2 won, or 0 if there is no
      *       winner or anything went wrong (so the match never gets stuck)
@@ -25,12 +21,16 @@ public class CandyBattle {
 
         try {
             // remove any leftover result from a previous battle
-            File resultFile = new File(RESULT);
+            File modelDir = findYoloModelDir();
+            File scriptFile = new File(modelDir, "candy_battle.py");
+            File modelFile = new File(modelDir, "my_model.pt");
+            File resultFile = new File(modelDir, "candy_result.txt");
+
             if (resultFile.exists()) {
                 resultFile.delete();
             }
 
-            String output = runPythonBattle("usb0");
+            String output = runPythonBattle("usb0", scriptFile, modelFile, resultFile);
             if (output.indexOf("ERROR: could not open camera") == -1) {
                 return readWinner(resultFile);
             }
@@ -49,13 +49,14 @@ public class CandyBattle {
      * pre:  source is a camera source understood by candy_battle.py
      * post: python battle has run once; combined output is printed and returned
      */
-    private static String runPythonBattle(String source) throws Exception {
+    private static String runPythonBattle(String source, File scriptFile,
+            File modelFile, File resultFile) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(
-                PYTHON, SCRIPT,
-                "--model", MODEL,
+                PYTHON, scriptFile.getAbsolutePath(),
+                "--model", modelFile.getAbsolutePath(),
                 "--source", source,
                 "--resolution", "1280x720",
-                "--result", RESULT);
+                "--result", resultFile.getAbsolutePath());
         pb.redirectErrorStream(true);
 
         Process process = pb.start();
@@ -75,7 +76,23 @@ public class CandyBattle {
     }
 
     /**
+     * finds the moved YOLO model folder inside the project
+     * pre:  the game is running from the compiled bin folder
+     * post: returns the yolo/my_model folder inside the project folder
+     */
+    private static File findYoloModelDir() throws Exception {
+        File binDir = new File(
+                CandyBattle.class.getProtectionDomain()
+                                  .getCodeSource()
+                                  .getLocation()
+                                  .toURI());
+        File projectDir = binDir.getParentFile();
+        return new File(projectDir, "yolo/my_model");
+    }
+
+    /**
      * gets the most recent camera or script error
+     * pre:  none
      * post: returns the last camera/script error, or an empty string if there was none
      */
     public static String getLastError() {

@@ -15,3 +15,8 @@ __CREATED_BY_JAVA_LANGUAGE_SERVER__/
 *.log
 *.tmp
 *.swp
+
+# YOLO local training artifacts
+AirHockeyMadeByYoungandBringjton/yolo/*.zip
+AirHockeyMadeByYoungandBringjton/yolo/**/__pycache__/
+AirHockeyMadeByYoungandBringjton/yolo/**/candy_result.txt

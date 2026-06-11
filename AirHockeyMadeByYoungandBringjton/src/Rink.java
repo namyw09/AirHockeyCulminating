@@ -160,6 +160,7 @@ public class Rink extends GameObject {
 
     /**
      * the rink does not need to do anything each frame
+     * pre:  none
      * post: no state changes
      */
     public void act() {
