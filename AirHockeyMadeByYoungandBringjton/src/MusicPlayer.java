@@ -9,24 +9,49 @@ public class MusicPlayer {
     private static String   musicFilePath  = null;
     private static long     startTimeMillis = 0;
 
+    // afplay runs as a separate OS process, so it keeps playing after the JVM
+    // exits — this shutdown hook kills it no matter how the game is quit
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
+    }
+
     /**
      * pre:  none
      * post: music starts playing from the given file; any previous playback is stopped
      */
     public static void start(File musicFile) {
+        start(musicFile, false);
+    }
+
+    /**
+     * pre:  none
+     * post: music loops from the given file until stop() or another track starts
+     */
+    public static void startLoop(File musicFile) {
+        start(musicFile, true);
+    }
+
+    /**
+     * pre:  none
+     * post: music starts from the given file; any previous playback is stopped
+     */
+    private static void start(File musicFile, boolean loop) {
         stop();
         if (musicFile == null || !musicFile.exists()) {
             return;
         }
 
-        musicFilePath   = musicFile.getAbsolutePath();
+        final String path = musicFile.getAbsolutePath();
+        musicFilePath   = path;
         startTimeMillis = System.currentTimeMillis();
 
         loopThread = new Thread(() -> {
             try {
-                ProcessBuilder pb = new ProcessBuilder("afplay", musicFilePath);
-                currentProcess = pb.start();
-                currentProcess.waitFor();
+                do {
+                    ProcessBuilder pb = new ProcessBuilder("afplay", path);
+                    currentProcess = pb.start();
+                    currentProcess.waitFor();
+                } while (loop && path.equals(musicFilePath));
             } catch (Exception e) {
                 // ignore
             }
@@ -142,5 +167,17 @@ public class MusicPlayer {
         } catch (URISyntaxException e) {
             return null;
         }
+    }
+
+    /**
+     * pre:  none
+     * post: returns the requested battle-stage music file, or null if missing
+     */
+    public static File findBattleMusicFile() {
+        File battleMusic = new File("/Users/brighton/Downloads/Coconut Mall (From Mario Kart Wii).mp3");
+        if (battleMusic.exists()) {
+            return battleMusic;
+        }
+        return null;
     }
 }
