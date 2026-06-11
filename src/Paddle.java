@@ -15,6 +15,10 @@ public class Paddle extends GameObject {
     private int currentSpeed = SPEED;
     private long hitFlashStart = 0;
 
+    // how far the paddle center moved on the most recent frame (its swing speed)
+    private int velocityX = 0;
+    private int velocityY = 0;
+
     /**
      * creates a paddle at a center point
      * pre:  centerX and centerY are valid positions on screen, color is not null
@@ -35,8 +39,10 @@ public class Paddle extends GameObject {
     public void move(boolean up, boolean down, boolean left, boolean right,
             int minX, int maxX, int minY, int maxY) {
 
-        int centerX = getX() + PADDLE_WIDTH / 2;
-        int centerY = getY() + getHeight() / 2;
+        int startCenterX = getX() + PADDLE_WIDTH / 2;
+        int startCenterY = getY() + getHeight() / 2;
+        int centerX = startCenterX;
+        int centerY = startCenterY;
 
         if (up)    { centerY = centerY - currentSpeed; }
         if (down)  { centerY = centerY + currentSpeed; }
@@ -59,7 +65,37 @@ public class Paddle extends GameObject {
 
         setX(centerX - PADDLE_WIDTH / 2);
         setY(centerY - getHeight() / 2);
+        velocityX = centerX - startCenterX;
+        velocityY = centerY - startCenterY;
         repaint();
+    }
+
+    /**
+     * records how far the paddle center moved this frame
+     * pre:  vx and vy are the change in center x and y for the current frame
+     * post: the paddle remembers its swing velocity for puck collisions
+     */
+    protected void setVelocity(int vx, int vy) {
+        velocityX = vx;
+        velocityY = vy;
+    }
+
+    /**
+     * gets how fast the paddle is moving sideways this frame
+     * pre:  paddle exists
+     * post: returns the paddle center's horizontal change for the current frame
+     */
+    public int getVelocityX() {
+        return velocityX;
+    }
+
+    /**
+     * gets how fast the paddle is moving up or down this frame
+     * pre:  paddle exists
+     * post: returns the paddle center's vertical change for the current frame
+     */
+    public int getVelocityY() {
+        return velocityY;
     }
 
     /**

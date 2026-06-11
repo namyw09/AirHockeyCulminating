@@ -777,13 +777,43 @@ public class AirHockeyGame extends Game {
     private void handlePaddleCollisions() {
         for (int i = 0; i < pucks.size(); i++) {
             Puck puck = pucks.get(i);
-            if (puck.collides(playerPaddle)) {
+            if (paddleHitsPuck(playerPaddle, puck)) {
                 puck.hitByPaddle(playerPaddle);
                 playerPaddle.flashHit();
-            } else if (puck.collides(opponentPaddle)) {
+            } else if (paddleHitsPuck(opponentPaddle, puck)) {
                 puck.hitByPaddle(opponentPaddle);
                 opponentPaddle.flashHit();
             }
         }
+    }
+
+    /**
+     * checks whether a paddle touched a puck this frame, including fast swings
+     * pre:  paddle and puck exist and have already moved this frame
+     * post: returns true if they overlap now, or if the paddle swept across the
+     *       puck during its movement this frame (so a fast swing can't tunnel past it)
+     */
+    private boolean paddleHitsPuck(Paddle paddle, Puck puck) {
+        if (puck.collides(paddle)) {
+            return true;
+        }
+
+        // rebuild the box the paddle swept through this frame, from its previous
+        // position (current minus this frame's velocity) to its current position
+        int prevX = paddle.getX() - paddle.getVelocityX();
+        int prevY = paddle.getY() - paddle.getVelocityY();
+        int boxLeft   = Math.min(paddle.getX(), prevX);
+        int boxTop    = Math.min(paddle.getY(), prevY);
+        int boxRight  = Math.max(paddle.getX(), prevX) + paddle.getWidth();
+        int boxBottom = Math.max(paddle.getY(), prevY) + paddle.getHeight();
+
+        int puckLeft   = puck.getCenterX() - puck.getRadius();
+        int puckTop    = puck.getCenterY() - puck.getRadius();
+        int puckRight  = puck.getCenterX() + puck.getRadius();
+        int puckBottom = puck.getCenterY() + puck.getRadius();
+
+        boolean overlapX = boxLeft < puckRight && puckLeft < boxRight;
+        boolean overlapY = boxTop < puckBottom && puckTop < boxBottom;
+        return overlapX && overlapY;
     }
 }

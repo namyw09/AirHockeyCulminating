@@ -98,6 +98,9 @@ while True:
         break
 
     frame = cv2.resize(frame, (resW, resH))
+    # mirror the image so it reads like a selfie: a player standing on the
+    # left appears on the left half (Player 1), matching where they stand
+    frame = cv2.flip(frame, 1)
 
     elapsed = time.time() - start_time
     remaining = COUNTDOWN_SECONDS - elapsed
@@ -182,6 +185,7 @@ while not quit_early and time.time() - reveal_start < REVEAL_SECONDS:
     if (not ret) or (frame is None):
         break
     frame = cv2.resize(frame, (resW, resH))
+    frame = cv2.flip(frame, 1)  # keep the same mirrored view on the reveal screen
 
     cv2.putText(frame, 'Computer picked: ' + target.upper(),
                 (resW // 2 - 260, resH // 2 - 40),

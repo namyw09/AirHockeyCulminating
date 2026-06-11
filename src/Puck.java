@@ -14,6 +14,8 @@ public class Puck extends GameObject {
     private static final double MAX_SPEED   = 17.0;
     private static final double HIT_BOOST   = 1.08;
     private static final double FRICTION    = 0.996;
+    // how much of the paddle's swing speed is transferred to the puck on a hit
+    private static final double SWING_TRANSFER = 0.8;
 
     private double exactX;
     private double exactY;
@@ -86,21 +88,27 @@ public class Puck extends GameObject {
     }
 
     /**
-     * bounces the puck off a paddle and adds a small speed boost
-     * pre:  puck is overlapping the given paddle
-     * post: xSpeed is aimed away from the paddle, speed increases slightly,
+     * bounces the puck off a paddle, adding the paddle's swing and a small speed boost
+     * pre:  puck is overlapping or was swept over by the given paddle
+     * post: puck is aimed away from the paddle's face, the paddle's swing velocity is
+     *       added so a moving hit drives the puck harder, speed increases slightly,
      *       and puck is pushed outside the paddle so it doesn't get stuck
      */
     public void hitByPaddle(Paddle paddle) {
-        double speedBeforeHit = getSpeed();
-
+        // base direction: bounce the puck off the face of the paddle
         if (paddle.getX() + paddle.getWidth() / 2 < getCenterX()) {
             xSpeed = Math.abs(xSpeed);
         } else {
             xSpeed = -Math.abs(xSpeed);
         }
 
-        if (speedBeforeHit > 0 && Math.abs(xSpeed) < MIN_SPEED) {
+        // add the paddle's own motion so swinging into the puck actually drives it,
+        // not just holding the paddle still and letting the puck bounce off
+        xSpeed = xSpeed + paddle.getVelocityX() * SWING_TRANSFER;
+        ySpeed = ySpeed + paddle.getVelocityY() * SWING_TRANSFER;
+
+        // always send the puck away with at least the minimum playable speed
+        if (Math.abs(xSpeed) < MIN_SPEED) {
             xSpeed = (xSpeed < 0) ? -MIN_SPEED : MIN_SPEED;
         }
 

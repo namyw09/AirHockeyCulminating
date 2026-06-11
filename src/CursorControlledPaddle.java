@@ -20,6 +20,9 @@ public class CursorControlledPaddle extends Paddle {
     public void followCursor(int cursorX, int cursorY,
             int minX, int maxX, int minY, int maxY) {
 
+        int oldCenterX = getX() + getWidth() / 2;
+        int oldCenterY = getY() + getHeight() / 2;
+
         int centerX = cursorX;
         int centerY = cursorY;
         int halfWidth = getWidth() / 2;
@@ -40,6 +43,7 @@ public class CursorControlledPaddle extends Paddle {
 
         setX(centerX - halfWidth);
         setY(centerY - halfHeight);
+        setVelocity(centerX - oldCenterX, centerY - oldCenterY);
         repaint();
     }
 }
