@@ -9,9 +9,9 @@ public class Puck extends GameObject {
 
     private static final int RADIUS   = 14;
     private static final int DIAMETER = RADIUS * 2;
-    private static final double START_SPEED = 10.5;
-    private static final double MIN_SPEED   = 5.5;
-    private static final double MAX_SPEED   = 16.0;
+    private static final double START_SPEED = 11.0;
+    private static final double MIN_SPEED   = 9.5;
+    private static final double MAX_SPEED   = 17.0;
     private static final double HIT_BOOST   = 1.08;
     private static final double FRICTION    = 0.996;
 
