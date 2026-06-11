@@ -125,7 +125,7 @@ public class Rink extends GameObject {
     /**
      * draws a large countdown or start message over the middle of the rink
      * pre:  centerMessage is set
-     * post: if centerMessage is not empty, it is drawn centered on the ice
+     * post: if centerMessage is not empty, it is drawn above the center puck
      */
     private void drawCenterMessage(Graphics g) {
         if (centerMessage == null || centerMessage.length() == 0) {
@@ -135,7 +135,7 @@ public class Rink extends GameObject {
         g.setFont(new Font("SansSerif", Font.BOLD, 72));
         FontMetrics fm = g.getFontMetrics();
         int x = rinkX + rinkWidth / 2 - fm.stringWidth(centerMessage) / 2;
-        int y = rinkY + rinkHeight / 2 + fm.getAscent() / 2;
+        int y = rinkY + rinkHeight / 2 - 95;
 
         g.setColor(new Color(10, 15, 25, 170));
         g.fillRoundRect(x - 28, y - fm.getAscent() - 18,

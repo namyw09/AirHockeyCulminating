@@ -88,11 +88,22 @@ public class Puck extends GameObject {
     /**
      * bounces the puck off a paddle and adds a small speed boost
      * pre:  puck is overlapping the given paddle
-     * post: xSpeed is flipped, speed increases slightly, and puck is pushed
-     *       outside the paddle so it doesn't get stuck
+     * post: xSpeed is aimed away from the paddle, speed increases slightly,
+     *       and puck is pushed outside the paddle so it doesn't get stuck
      */
     public void hitByPaddle(Paddle paddle) {
-        xSpeed = -xSpeed;
+        double speedBeforeHit = getSpeed();
+
+        if (paddle.getX() + paddle.getWidth() / 2 < getCenterX()) {
+            xSpeed = Math.abs(xSpeed);
+        } else {
+            xSpeed = -Math.abs(xSpeed);
+        }
+
+        if (speedBeforeHit > 0 && Math.abs(xSpeed) < MIN_SPEED) {
+            xSpeed = (xSpeed < 0) ? -MIN_SPEED : MIN_SPEED;
+        }
+
         multiplySpeed(HIT_BOOST);
 
         if (xSpeed > 0) {

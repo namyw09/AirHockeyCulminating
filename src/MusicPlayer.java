@@ -8,6 +8,7 @@ public class MusicPlayer {
     private static Thread   loopThread     = null;
     private static String   musicFilePath  = null;
     private static long     startTimeMillis = 0;
+    private static String   currentVolume   = "1.00";
 
     // afplay runs as a separate OS process, so it keeps playing after the JVM
     // exits — this shutdown hook kills it no matter how the game is quit
@@ -47,11 +48,12 @@ public class MusicPlayer {
         final String path = musicFile.getAbsolutePath();
         musicFilePath   = path;
         startTimeMillis = System.currentTimeMillis();
+        currentVolume   = "1.00";
 
         loopThread = new Thread(() -> {
             try {
                 do {
-                    ProcessBuilder pb = new ProcessBuilder("afplay", path);
+                    ProcessBuilder pb = new ProcessBuilder("afplay", "-v", currentVolume, path);
                     currentProcess = pb.start();
                     currentProcess.waitFor();
                 } while (loop && path.equals(musicFilePath));
@@ -66,31 +68,16 @@ public class MusicPlayer {
     /**
      * lowers the current music volume
      * pre:  none
-     * post: a new quiet afplay process starts at volume 0.2; after 300ms the old
-     *       loud process is killed so the transition has no audible gap
+     * post: the loop restarts quietly at volume 0.2
      */
     public static void lowerVolume() {
         if (currentProcess == null || musicFilePath == null) {
             return;
         }
 
-        final Process oldProcess = currentProcess;
-
-        try {
-            // start quiet process from the beginning — afplay has no seek flag
-            currentProcess = new ProcessBuilder("afplay", "-v", "0.20", musicFilePath).start();
-            startTimeMillis = System.currentTimeMillis();
-        } catch (Exception e) {
-            return;
-        }
-
-        // let the new process produce audio for 300ms before killing the old loud one
-        Thread overlap = new Thread(() -> {
-            try { Thread.sleep(300); } catch (InterruptedException e) { /* ignore */ }
-            oldProcess.destroy();
-        });
-        overlap.setDaemon(true);
-        overlap.start();
+        currentVolume = "0.20";
+        currentProcess.destroy();
+        currentProcess = null;
     }
 
     /**
