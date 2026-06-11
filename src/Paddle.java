@@ -9,9 +9,11 @@ public class Paddle extends GameObject {
     private static final int PADDLE_WIDTH  = 16;
     private static final int PADDLE_HEIGHT = 80;
     private static final int SPEED = 5;
+    private static final int HIT_FLASH_MS = 140;
 
     private Color paddleColor;
     private int currentSpeed = SPEED;
+    private long hitFlashStart = 0;
 
     /**
      * creates a paddle at a center point
@@ -112,6 +114,16 @@ public class Paddle extends GameObject {
     }
 
     /**
+     * briefly highlights the paddle after hitting a puck
+     * pre:  paddle exists on screen
+     * post: the next paint calls draw a brighter paddle for a short time
+     */
+    public void flashHit() {
+        hitFlashStart = System.currentTimeMillis();
+        repaint();
+    }
+
+    /**
      * leaves paddle frame behavior to AirHockeyGame
      * pre:  none
      * post: nothing - paddle movement is controlled through move() in AirHockeyGame
@@ -125,10 +137,20 @@ public class Paddle extends GameObject {
      * post: paddle is drawn with a white border and the player's color inside
      */
     public void paint(Graphics g) {
-        g.setColor(Color.WHITE);
+        boolean flashing = System.currentTimeMillis() - hitFlashStart < HIT_FLASH_MS;
+
+        if (flashing) {
+            g.setColor(new Color(255, 255, 180));
+        } else {
+            g.setColor(Color.WHITE);
+        }
         g.fillRoundRect(0, 0, PADDLE_WIDTH, getHeight(), 8, 8);
 
-        g.setColor(paddleColor);
+        if (flashing) {
+            g.setColor(paddleColor.brighter());
+        } else {
+            g.setColor(paddleColor);
+        }
         g.fillRoundRect(3, 3, PADDLE_WIDTH - 6, getHeight() - 6, 6, 6);
     }
 }

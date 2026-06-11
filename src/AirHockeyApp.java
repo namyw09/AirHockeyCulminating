@@ -18,7 +18,7 @@ public class AirHockeyApp {
      */
     public static void showHome() {
         HomeScreen home = new HomeScreen();
-        MusicPlayer.start(MusicPlayer.findThemeFile());
+        MusicPlayer.startLoop(MusicPlayer.findThemeFile());
         home.setVisible(true);
     }
 

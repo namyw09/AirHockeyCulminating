@@ -93,7 +93,7 @@ public class Powerup extends GameObject {
     /**
      * checks whether the powerup has been collected
      * pre:  powerup exists
-     * post: returns true if the puck has already picked up this powerup
+     * post: returns true if the owner paddle has already picked up this powerup
      */
     public boolean isCollected() {
         return collected;
