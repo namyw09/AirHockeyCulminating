@@ -20,7 +20,8 @@ public class Rink extends GameObject {
     private String player2Name;
     private int player1Score = 0;
     private int player2Score = 0;
-    private String timeText = "01:30";
+    private String timeText = "01:00";
+    private String centerMessage = "";
 
 
     /**
@@ -54,6 +55,16 @@ public class Rink extends GameObject {
         player1Score = p1Score;
         player2Score = p2Score;
         timeText = timerText;
+        repaint();
+    }
+
+    /**
+     * sets the large center message shown over the rink
+     * pre:  message is not null
+     * post: centerMessage is updated and the rink repaints
+     */
+    public void setCenterMessage(String message) {
+        centerMessage = message;
         repaint();
     }
 
@@ -97,6 +108,7 @@ public class Rink extends GameObject {
 
         drawTimer(g);
         drawPlayerScores(g);
+        drawCenterMessage(g);
 
         // control labels at the bottom of the header strip, one per side
         g.setColor(new Color(100, 150, 230));
@@ -108,6 +120,29 @@ public class Rink extends GameObject {
         FontMetrics lm = g.getFontMetrics();
         g.drawString(player2Name + " (Arrows)",
                 rinkX + rinkWidth - lm.stringWidth(player2Name + " (Arrows)") - 10, rinkY - 6);
+    }
+
+    /**
+     * draws a large countdown or start message over the middle of the rink
+     * pre:  centerMessage is set
+     * post: if centerMessage is not empty, it is drawn centered on the ice
+     */
+    private void drawCenterMessage(Graphics g) {
+        if (centerMessage == null || centerMessage.length() == 0) {
+            return;
+        }
+
+        g.setFont(new Font("SansSerif", Font.BOLD, 72));
+        FontMetrics fm = g.getFontMetrics();
+        int x = rinkX + rinkWidth / 2 - fm.stringWidth(centerMessage) / 2;
+        int y = rinkY + rinkHeight / 2 + fm.getAscent() / 2;
+
+        g.setColor(new Color(10, 15, 25, 170));
+        g.fillRoundRect(x - 28, y - fm.getAscent() - 18,
+                fm.stringWidth(centerMessage) + 56, fm.getAscent() + 36, 18, 18);
+
+        g.setColor(Color.WHITE);
+        g.drawString(centerMessage, x, y);
     }
 
     /**

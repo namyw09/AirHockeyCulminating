@@ -4,6 +4,7 @@ import java.awt.event.MouseEvent;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 
@@ -29,7 +30,7 @@ public class AirHockeyGame extends Game {
     private Rink rink;
     private CursorControlledPaddle playerPaddle;
     private CursorControlledPaddle opponentPaddle;
-    private Puck puck;
+    private ArrayList<Puck> pucks = new ArrayList<Puck>();
 
     // current score for each player
     private int player1Score = 0;
@@ -53,6 +54,13 @@ public class AirHockeyGame extends Game {
     private long    opponentSlowedStart  = 0;
     private Random  random               = new Random();
 
+    // opening and multi-puck pacing
+    private static final int COUNTDOWN_MS = 3200;
+    private long    countdownStartTime = 0;
+    private boolean countdownDone      = false;
+    private boolean secondPuckAdded    = false;
+    private boolean thirdPuckAdded     = false;
+
     // default names in case the player skips the input
     private String player1Name = "Player 1";
     private String player2Name = "Player 2";
@@ -68,7 +76,7 @@ public class AirHockeyGame extends Game {
     /**
      * sets up the window, timer, player names, and starting objects
      * pre:  the game frame exists but nothing has been added yet
-     * post: the rink, puck, paddles, and 0-0 scoreboard are ready
+     * post: the rink, starting puck, paddles, and 0-0 scoreboard are ready
      */
     public void setup() {
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -89,9 +97,7 @@ public class AirHockeyGame extends Game {
         player2Name = promptForName("Enter Player 2's name:", "Player 2");
 
         // puck and paddles are added before the rink so they stay visible
-        puck = new Puck(
-                RINK_X + RINK_WIDTH / 2,
-                RINK_Y + RINK_HEIGHT / 2);
+        addPuck(1, false);
 
         playerPaddle = new CursorControlledPaddle(
                 RINK_X + 80,
@@ -109,10 +115,10 @@ public class AirHockeyGame extends Game {
 
         updateScoreboard();
 
-        add(puck);
         add(playerPaddle);
         add(opponentPaddle);
         add(rink);
+        rink.setCenterMessage("3");
 
         lastPowerupEndTime = System.currentTimeMillis();
 
@@ -162,6 +168,11 @@ public class AirHockeyGame extends Game {
             return;
         }
 
+        if (!countdownDone) {
+            handleStartCountdown();
+            return;
+        }
+
         // surprise candy battle once the clock drops into the trigger window
         if (!candyBattleDone && getTimeRemainingSeconds() <= candyBattleTriggerRemaining) {
             candyBattleDone = true;
@@ -170,7 +181,8 @@ public class AirHockeyGame extends Game {
         }
 
         handleInput();
-        puck.update();
+        addTimedExtraPucks();
+        updatePucks();
         handleGoals();
         if (gameOver) {
             return;
@@ -178,6 +190,39 @@ public class AirHockeyGame extends Game {
         handleWallCollisions();
         handlePaddleCollisions();
         handlePowerup();
+    }
+
+    /**
+     * controls the one-time opening countdown
+     * pre:  rink and first puck exist
+     * post: countdown text updates; when it finishes, timer is reset and puck play begins
+     */
+    private void handleStartCountdown() {
+        if (countdownStartTime == 0) {
+            countdownStartTime = System.currentTimeMillis();
+        }
+
+        long elapsed = System.currentTimeMillis() - countdownStartTime;
+        String message;
+
+        if (elapsed < 1000) {
+            message = "3";
+        } else if (elapsed < 2000) {
+            message = "2";
+        } else if (elapsed < 3000) {
+            message = "1";
+        } else {
+            message = "GO!";
+        }
+
+        rink.setCenterMessage(message);
+
+        if (elapsed >= COUNTDOWN_MS) {
+            countdownDone = true;
+            rink.setCenterMessage("");
+            resetGameTimer();
+            serveAllPucks();
+        }
     }
 
     /**
@@ -403,13 +448,87 @@ public class AirHockeyGame extends Game {
     }
 
     /**
-     * bounces the puck off the rink walls, except where the goals are
-     * pre:  the puck exists and already moved this frame
-     * post: the puck is pushed back in bounds and bounces if it hit a wall
+     * adds a puck at center and optionally serves it right away
+     * pre:  rink dimensions are initialized
+     * post: a new puck is added above the rink layer and included in puck updates
+     */
+    private void addPuck(int direction, boolean serveNow) {
+        Puck newPuck = new Puck(
+                RINK_X + RINK_WIDTH / 2,
+                RINK_Y + RINK_HEIGHT / 2);
+
+        if (serveNow) {
+            newPuck.serve(direction, random);
+        }
+
+        pucks.add(newPuck);
+        add(newPuck);
+        if (rink != null) {
+            getContentPane().setComponentZOrder(newPuck, getContentPane().getComponentCount() - 2);
+        }
+    }
+
+    /**
+     * serves every puck that is already on the rink
+     * pre:  at least one puck exists
+     * post: each puck gets a randomized diagonal serve
+     */
+    private void serveAllPucks() {
+        for (int i = 0; i < pucks.size(); i++) {
+            int direction = (i % 2 == 0) ? 1 : -1;
+            pucks.get(i).serve(direction, random);
+        }
+    }
+
+    /**
+     * adds extra pucks as the match clock reaches ramp moments
+     * pre:  countdown is done and timer is running
+     * post: second puck appears at 40 seconds, third puck appears at 20 seconds
+     */
+    private void addTimedExtraPucks() {
+        int remaining = getTimeRemainingSeconds();
+
+        if (!secondPuckAdded && remaining <= 40) {
+            secondPuckAdded = true;
+            addPuck(-1, true);
+        }
+
+        if (!thirdPuckAdded && remaining <= 20) {
+            thirdPuckAdded = true;
+            addPuck(1, true);
+        }
+    }
+
+    /**
+     * updates all active pucks
+     * pre:  pucks list exists
+     * post: every puck moves and applies its own speed physics
+     */
+    private void updatePucks() {
+        for (int i = 0; i < pucks.size(); i++) {
+            pucks.get(i).update();
+        }
+    }
+
+    /**
+     * bounces all pucks off the rink walls, except where the goals are
+     * pre:  pucks already moved this frame
+     * post: each puck is pushed back in bounds and bounces if it hit a wall
      */
     private void handleWallCollisions() {
-        int goalTop      = RINK_Y + (RINK_HEIGHT - GOAL_HEIGHT) / 2;
-        int goalBottom   = goalTop + GOAL_HEIGHT;
+        for (int i = 0; i < pucks.size(); i++) {
+            handleWallCollision(pucks.get(i));
+        }
+    }
+
+    /**
+     * bounces one puck off the rink walls, except where the goals are
+     * pre:  puck already moved this frame
+     * post: puck is pushed back in bounds and bounces if it hit a wall
+     */
+    private void handleWallCollision(Puck puck) {
+        int goalTop = RINK_Y + (RINK_HEIGHT - GOAL_HEIGHT) / 2;
+        int goalBottom = goalTop + GOAL_HEIGHT;
         int puckDiameter = puck.getRadius() * 2;
 
         boolean inGoalOpening = false;
@@ -419,34 +538,48 @@ public class AirHockeyGame extends Game {
 
         // top wall
         if (puck.getY() <= RINK_Y) {
-            puck.setY(RINK_Y);
+            puck.setPuckY(RINK_Y);
             puck.bounceVertical();
         }
 
         // bottom wall
         if (puck.getY() + puckDiameter >= RINK_Y + RINK_HEIGHT) {
-            puck.setY(RINK_Y + RINK_HEIGHT - puckDiameter);
+            puck.setPuckY(RINK_Y + RINK_HEIGHT - puckDiameter);
             puck.bounceVertical();
         }
 
         // left and right walls - skip if the puck is lined up with the goal
         if (puck.getX() <= RINK_X && inGoalOpening == false) {
-            puck.setX(RINK_X);
+            puck.setPuckX(RINK_X);
             puck.bounceHorizontal();
         }
 
         if (puck.getX() + puckDiameter >= RINK_X + RINK_WIDTH && inGoalOpening == false) {
-            puck.setX(RINK_X + RINK_WIDTH - puckDiameter);
+            puck.setPuckX(RINK_X + RINK_WIDTH - puckDiameter);
             puck.bounceHorizontal();
         }
     }
 
     /**
-     * updates the score if the puck goes into a goal
-     * pre:  the puck exists and might be lined up with a goal
-     * post: the right score goes up, the scoreboard updates, and the puck resets
+     * updates the score if any puck goes into a goal
+     * pre:  pucks exist and might be lined up with a goal
+     * post: scores update and only the scoring puck resets
      */
     private void handleGoals() {
+        for (int i = 0; i < pucks.size(); i++) {
+            handleGoal(pucks.get(i));
+            if (gameOver) {
+                return;
+            }
+        }
+    }
+
+    /**
+     * updates the score if one puck goes into a goal
+     * pre:  puck exists and might be lined up with a goal
+     * post: the right score goes up, scoreboard updates, and puck resets
+     */
+    private void handleGoal(Puck puck) {
         int goalTop      = RINK_Y + (RINK_HEIGHT - GOAL_HEIGHT) / 2;
         int goalBottom   = goalTop + GOAL_HEIGHT;
         int puckDiameter = puck.getRadius() * 2;
@@ -468,7 +601,7 @@ public class AirHockeyGame extends Game {
             if (gameOver) {
                 return;
             }
-            puck.reset(RINK_X + RINK_WIDTH / 2, RINK_Y + RINK_HEIGHT / 2, -1);
+            puck.reset(RINK_X + RINK_WIDTH / 2, RINK_Y + RINK_HEIGHT / 2, -1, random);
         }
 
         // puck crossed the right goal line
@@ -479,7 +612,7 @@ public class AirHockeyGame extends Game {
             if (gameOver) {
                 return;
             }
-            puck.reset(RINK_X + RINK_WIDTH / 2, RINK_Y + RINK_HEIGHT / 2, 1);
+            puck.reset(RINK_X + RINK_WIDTH / 2, RINK_Y + RINK_HEIGHT / 2, 1, random);
         }
     }
 
@@ -532,10 +665,9 @@ public class AirHockeyGame extends Game {
 
     /**
      * manages the full powerup lifecycle each frame: spawning, expiry, collection, and effect revert
-     * pre:  puck, playerPaddle, opponentPaddle, and rink all exist
+     * pre:  playerPaddle, opponentPaddle, and rink all exist
      * post: grow effects that have expired are reverted; a new powerup spawns after the cooldown;
-     *       a powerup that times out is removed; a powerup touched by the puck is collected and
-     *       the owner's paddle grows
+     *       a powerup that times out is removed; only the owner paddle can collect it
      */
     private void handlePowerup() {
         long now = System.currentTimeMillis();
@@ -587,10 +719,17 @@ public class AirHockeyGame extends Game {
             return;
         }
 
-        if (puck.collides(currentPowerup)
-                || playerPaddle.collides(currentPowerup)
-                || opponentPaddle.collides(currentPowerup)) {
-            int owner = currentPowerup.getOwnerPlayer();
+        int owner = currentPowerup.getOwnerPlayer();
+        boolean collectedByOwner = false;
+
+        if (owner == 1 && playerPaddle.collides(currentPowerup)) {
+            collectedByOwner = true;
+        }
+        if (owner == 2 && opponentPaddle.collides(currentPowerup)) {
+            collectedByOwner = true;
+        }
+
+        if (collectedByOwner) {
             int type  = currentPowerup.getType();
 
             currentPowerup.collect();
@@ -631,15 +770,20 @@ public class AirHockeyGame extends Game {
     }
 
     /**
-     * bounces the puck when it touches a paddle
-     * pre:  the puck and both paddles exist
-     * post: if the puck hits a paddle, it moves out and reverses direction
+     * bounces pucks when they touch a paddle
+     * pre:  pucks and both paddles exist
+     * post: any puck that hits a paddle moves out, reverses direction, and speeds up slightly
      */
     private void handlePaddleCollisions() {
-        if (puck.collides(playerPaddle)) {
-            puck.hitByPaddle(playerPaddle);
-        } else if (puck.collides(opponentPaddle)) {
-            puck.hitByPaddle(opponentPaddle);
+        for (int i = 0; i < pucks.size(); i++) {
+            Puck puck = pucks.get(i);
+            if (puck.collides(playerPaddle)) {
+                puck.hitByPaddle(playerPaddle);
+                playerPaddle.flashHit();
+            } else if (puck.collides(opponentPaddle)) {
+                puck.hitByPaddle(opponentPaddle);
+                opponentPaddle.flashHit();
+            }
         }
     }
 }
