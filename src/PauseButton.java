@@ -54,7 +54,7 @@ public class PauseButton extends GameObject {
         g.fillRoundRect(0, 0, WIDTH, HEIGHT, 8, 8);
 
         g.setColor(Color.WHITE);
-        g.setFont(new Font("SansSerif", Font.BOLD, 13));
+        g.setFont(RetroFont.get(9f));
         java.awt.FontMetrics fm = g.getFontMetrics();
         String text = "|| PAUSE";
         int textX = (WIDTH - fm.stringWidth(text)) / 2;

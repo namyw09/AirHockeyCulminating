@@ -1,3 +1,26 @@
+# ---------------------------------------------------------------------------
+# candy_battle.py
+#
+# This is our OWN ORIGINAL minigame, written by Brighton Ng + Youngwoo Nam for
+# the Air Hockey culminating project. It builds on the same YOLO + OpenCV
+# pipeline we learned from the EdjeElectronics tutorial (argument parsing follows
+# yolo_detect.py's style), but the candy-battle game logic, scoring, countdown,
+# and Java integration are our own work. The YOLO model (my_model.pt) was trained
+# by us on candy photos we captured and labelled.
+#
+# Sources used while building the YOLO side of this project:
+#   - Training video:   https://www.youtube.com/watch?v=r0RspiLG260
+#   - Tutorial repo:    https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models
+#   - Companion guide:  https://www.ejtech.io/learn/train-yolo-models
+#   - Colab notebook:   https://colab.research.google.com/github/EdjeElectronics/Train-and-Deploy-YOLO-Models/blob/main/Train_YOLO_Models.ipynb
+#   - Candy dataset:    https://s3.us-west-1.amazonaws.com/evanjuras.com/resources/candy_data_06JAN25.zip
+#   - Label Studio:     https://labelstud.io/
+#   - Ultralytics YOLO: https://github.com/ultralytics/ultralytics  (docs: https://docs.ultralytics.com/)
+#   - OpenCV:           https://opencv.org/
+#   - PyTorch:          https://pytorch.org/get-started/locally/
+#   - Anaconda:         https://www.anaconda.com/download
+# ---------------------------------------------------------------------------
+
 import os
 import sys
 import argparse

@@ -3,11 +3,14 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,6 +25,12 @@ public class HomeScreen extends JFrame {
 
     private static final int WIDTH  = 800;
     private static final int HEIGHT = 600;
+
+    // shared neon arcade palette
+    private static final Color BG_DARK     = new Color(20, 30, 48);
+    private static final Color NEON_BLUE   = new Color(62, 139, 255);
+    private static final Color NEON_CYAN   = new Color(70, 200, 220);
+    private static final Color GRID_LINE   = new Color(30, 45, 70);
 
     /**
      * builds the main menu window
@@ -43,18 +52,18 @@ public class HomeScreen extends JFrame {
             }
         };
         panel.setLayout(null);
-        panel.setBackground(new Color(20, 30, 48));
+        panel.setBackground(BG_DARK);
 
-        // game title
+        // game title in the pixel arcade font
         JLabel title = new JLabel("AIR HOCKEY", SwingConstants.CENTER);
-        title.setFont(new Font("SansSerif", Font.BOLD, 58));
+        title.setFont(RetroFont.get(40f));
         title.setForeground(Color.WHITE);
         title.setBounds(0, 110, WIDTH, 72);
         panel.add(title);
 
-        // byline
+        // byline in a readable terminal font
         JLabel byline = new JLabel("by Brighton & Youngwoo", SwingConstants.CENTER);
-        byline.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        byline.setFont(new Font("Monospaced", Font.PLAIN, 13));
         byline.setForeground(new Color(120, 155, 200));
         byline.setBounds(0, 188, WIDTH, 28);
         panel.add(byline);
@@ -62,7 +71,7 @@ public class HomeScreen extends JFrame {
         // buttons centered horizontally
         int btnX = (WIDTH - 230) / 2;
 
-        JButton playBtn = makeButton("▶   PLAY", new Color(54, 124, 230));
+        JButton playBtn = makeButton("PLAY", new Color(54, 124, 230));
         playBtn.setBounds(btnX, 268, 230, 54);
         playBtn.addActionListener(e -> {
             MusicPlayer.lowerVolume();
@@ -89,15 +98,30 @@ public class HomeScreen extends JFrame {
      * pre:  text and bg are not null
      * post: returns a styled JButton with the game's dark theme and hover cursor
      */
-    private JButton makeButton(String text, Color bg) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 17));
+    private JButton makeButton(String text, final Color bg) {
+        final JButton btn = new JButton(text);
+        btn.setFont(RetroFont.get(14f));
         btn.setForeground(Color.WHITE);
         btn.setBackground(bg);
         btn.setOpaque(true);
         btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
+        // square pixel-style neon border instead of a rounded one
+        btn.setBorder(BorderFactory.createLineBorder(NEON_CYAN, 2));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // brighten the button while hovered for an arcade feel
+        final Color hover = bg.brighter();
+        btn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                btn.setBackground(hover);
+                btn.setBorder(BorderFactory.createLineBorder(NEON_BLUE, 2));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(bg);
+                btn.setBorder(BorderFactory.createLineBorder(NEON_CYAN, 2));
+            }
+        });
         return btn;
     }
 
@@ -107,14 +131,25 @@ public class HomeScreen extends JFrame {
      * post: a decorative rink outline is drawn behind the menu content
      */
     private void drawBackground(Graphics g) {
-        // faint rink outline as decoration
+        // subtle arcade grid across the whole screen
+        g.setColor(GRID_LINE);
+        for (int x = 0; x <= WIDTH; x += 40) {
+            g.drawLine(x, 0, x, HEIGHT);
+        }
+        for (int y = 0; y <= HEIGHT; y += 40) {
+            g.drawLine(0, y, WIDTH, y);
+        }
+
+        // faint rink panel as decoration
         g.setColor(new Color(28, 42, 65));
         g.fillRoundRect(60, 60, 680, 480, 20, 20);
 
-        g.setColor(new Color(35, 55, 85));
+        // neon rink outline
+        g.setColor(NEON_BLUE);
         g.drawRoundRect(60, 60, 680, 480, 20, 20);
 
         // center line
+        g.setColor(NEON_CYAN);
         g.drawLine(WIDTH / 2, 60, WIDTH / 2, 540);
 
         // center circle

@@ -4,6 +4,16 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 
 // launches the Python YOLO "candy battle" minigame and reads back the winner
+//
+// The YOLO model run by the Python script was trained by us following Evan Juras'
+// (EdjeElectronics) "Train and Deploy YOLO Models" tutorial. Full source list:
+//   - YOLO training video:   https://www.youtube.com/watch?v=r0RspiLG260
+//   - Tutorial repo:         https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models
+//   - Companion guide:       https://www.ejtech.io/learn/train-yolo-models
+//   - Colab notebook:        https://colab.research.google.com/github/EdjeElectronics/Train-and-Deploy-YOLO-Models/blob/main/Train_YOLO_Models.ipynb
+//   - Candy dataset:         https://s3.us-west-1.amazonaws.com/evanjuras.com/resources/candy_data_06JAN25.zip
+//   - Label Studio:          https://labelstud.io/
+//   - Ultralytics YOLO:      https://github.com/ultralytics/ultralytics  (docs: https://docs.ultralytics.com/)
 public class CandyBattle {
 
     // python environment used to run the YOLO candy battle script

@@ -9,9 +9,6 @@ public class MusicPlayer {
     private static String   musicFilePath  = null;
     private static long     startTimeMillis = 0;
     private static String   currentVolume   = "1.00";
-    // when > 0, the next (re)start resumes the track from this position instead
-    // of the beginning — used to lower the volume without restarting the song
-    private static float    resumeSeconds   = 0;
 
     // afplay runs as a separate OS process, so it keeps playing after the JVM
     // exits — this shutdown hook kills it no matter how the game is quit
@@ -51,24 +48,15 @@ public class MusicPlayer {
         final String path = musicFile.getAbsolutePath();
         musicFilePath   = path;
         currentVolume   = "1.00";
-        resumeSeconds   = 0;
 
         loopThread = new Thread(() -> {
             try {
                 do {
-                    // resume part-way through if asked (volume duck), otherwise
-                    // play from the start; track startTimeMillis either way
-                    float seekTo = resumeSeconds;
-                    resumeSeconds = 0;
-                    ProcessBuilder pb;
-                    if (seekTo > 0) {
-                        pb = new ProcessBuilder("afplay", "-v", currentVolume,
-                                "-s", String.format("%.2f", seekTo), path);
-                        startTimeMillis = System.currentTimeMillis() - (long) (seekTo * 1000);
-                    } else {
-                        pb = new ProcessBuilder("afplay", "-v", currentVolume, path);
-                        startTimeMillis = System.currentTimeMillis();
-                    }
+                    // afplay has no seek option, so each loop plays from the start.
+                    // currentVolume may have been lowered by lowerVolume() in between
+                    // loops, which is how the menu music ducks without being cut off.
+                    ProcessBuilder pb = new ProcessBuilder("afplay", "-v", currentVolume, path);
+                    startTimeMillis = System.currentTimeMillis();
                     currentProcess = pb.start();
                     currentProcess.waitFor();
                 } while (loop && path.equals(musicFilePath));
@@ -83,19 +71,15 @@ public class MusicPlayer {
     /**
      * lowers the current music volume
      * pre:  none
-     * post: the track keeps playing continuously from its current position at
-     *       volume 0.2, instead of restarting from the beginning
+     * post: the menu music keeps playing without interruption; the lower volume
+     *       takes effect the next time the looping track naturally repeats
      */
     public static void lowerVolume() {
-        if (currentProcess == null || musicFilePath == null) {
-            return;
-        }
-
-        // remember where we are so the loop resumes from here, not from the start
-        resumeSeconds = (System.currentTimeMillis() - startTimeMillis) / 1000.0f;
+        // afplay can't change the volume of an already-running process, and it has
+        // no seek option, so we must NOT destroy/restart the process here - doing
+        // that is what made the entry music cut out and jump back to the start.
+        // Instead we just remember the quieter volume for the next loop.
         currentVolume = "0.20";
-        currentProcess.destroy();
-        currentProcess = null;
     }
 
     /**
@@ -176,6 +160,25 @@ public class MusicPlayer {
                                  .getLocation()
                                  .toURI());
             return new File(binDir.getParentFile(), "assets/audio/theme.mp3");
+        } catch (URISyntaxException e) {
+            return null;
+        }
+    }
+
+    /**
+     * resolves any audio file inside the project assets by name
+     * pre:  fileName includes the extension (e.g. "final-intense.mp3")
+     * post: returns the file under assets/audio (which may or may not exist),
+     *       or null if the location cannot be resolved
+     */
+    public static File findAudio(String fileName) {
+        try {
+            File binDir = new File(
+                MusicPlayer.class.getProtectionDomain()
+                                 .getCodeSource()
+                                 .getLocation()
+                                 .toURI());
+            return new File(binDir.getParentFile(), "assets/audio/" + fileName);
         } catch (URISyntaxException e) {
             return null;
         }

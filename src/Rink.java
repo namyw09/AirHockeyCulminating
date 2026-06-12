@@ -23,6 +23,10 @@ public class Rink extends GameObject {
     private String timeText = "01:00";
     private String centerMessage = "";
 
+    // retro atmosphere flags driven by the game in the final seconds / overtime
+    private boolean finalCountdown = false;  // last 5 seconds of regulation
+    private boolean suddenDeath    = false;  // overtime: next goal wins
+
 
     /**
      * creates the rink background and saves the player labels
@@ -69,6 +73,26 @@ public class Rink extends GameObject {
     }
 
     /**
+     * turns the final-seconds intensity treatment on or off
+     * pre:  none
+     * post: when on, the rink border pulses red and the timer turns red
+     */
+    public void setFinalCountdown(boolean on) {
+        finalCountdown = on;
+        repaint();
+    }
+
+    /**
+     * turns the sudden-death overtime treatment on or off
+     * pre:  none
+     * post: when on, a pulsing red border and a "SUDDEN DEATH" banner are shown
+     */
+    public void setSuddenDeath(boolean on) {
+        suddenDeath = on;
+        repaint();
+    }
+
+    /**
      * draws the rink, goals, labels, and scoreboard
      * pre:  the rink dimensions and scoreboard values are set
      * post: the current rink is drawn on screen
@@ -106,17 +130,20 @@ public class Rink extends GameObject {
         g.setColor(new Color(100, 140, 180));
         g.drawLine(centerX, rinkY, centerX, rinkY + rinkHeight);
 
+        // pulsing red border / banner during the final seconds and overtime
+        drawIntensity(g);
+
         drawTimer(g);
         drawPlayerScores(g);
         drawCenterMessage(g);
 
         // control labels at the bottom of the header strip, one per side
         g.setColor(new Color(100, 150, 230));
-        g.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        g.setFont(new Font("Monospaced", Font.PLAIN, 12));
         g.drawString(player1Name + " (W/A/S/D)", rinkX + 10, rinkY - 6);
 
         g.setColor(new Color(220, 100, 100));
-        g.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        g.setFont(new Font("Monospaced", Font.PLAIN, 12));
         FontMetrics lm = g.getFontMetrics();
         g.drawString(player2Name + " (Arrows)",
                 rinkX + rinkWidth - lm.stringWidth(player2Name + " (Arrows)") - 10, rinkY - 6);
@@ -132,7 +159,7 @@ public class Rink extends GameObject {
             return;
         }
 
-        g.setFont(new Font("SansSerif", Font.BOLD, 72));
+        g.setFont(RetroFont.get(52f));
         FontMetrics fm = g.getFontMetrics();
         int x = rinkX + rinkWidth / 2 - fm.stringWidth(centerMessage) / 2;
         int y = rinkY + rinkHeight / 2 - 95;
@@ -141,8 +168,47 @@ public class Rink extends GameObject {
         g.fillRoundRect(x - 28, y - fm.getAscent() - 18,
                 fm.stringWidth(centerMessage) + 56, fm.getAscent() + 36, 18, 18);
 
-        g.setColor(Color.WHITE);
+        // the countdown numbers glow red; normal messages (GO!, etc.) stay white
+        g.setColor(finalCountdown ? new Color(255, 80, 80) : Color.WHITE);
         g.drawString(centerMessage, x, y);
+    }
+
+    /**
+     * draws the final-seconds and sudden-death intensity overlay
+     * pre:  finalCountdown / suddenDeath flags reflect the game state
+     * post: when either is on, a red border pulses around the rink; in overtime
+     *       a "SUDDEN DEATH" banner is drawn under the timer
+     */
+    private void drawIntensity(Graphics g) {
+        if (!finalCountdown && !suddenDeath) {
+            return;
+        }
+
+        // pulse 0..1 using a sine wave so the border breathes about twice a second
+        double phase = (System.currentTimeMillis() % 700) / 700.0;
+        float  pulse = (float) (0.35 + 0.65 * Math.abs(Math.sin(phase * Math.PI)));
+        int    alpha = (int) (pulse * 200);
+
+        g.setColor(new Color(255, 40, 40, alpha));
+        // a few nested rounded rectangles read as a thick glowing border
+        for (int i = 0; i < 4; i++) {
+            g.drawRoundRect(rinkX - 6 - i, rinkY - 6 - i,
+                    rinkWidth + 12 + i * 2, rinkHeight + 12 + i * 2, 18, 18);
+        }
+
+        if (suddenDeath) {
+            String banner = "SUDDEN DEATH";
+            g.setFont(RetroFont.get(16f));
+            FontMetrics fm = g.getFontMetrics();
+            int bx = rinkX + rinkWidth / 2 - fm.stringWidth(banner) / 2;
+            int by = rinkY + rinkHeight + 30;
+
+            g.setColor(new Color(10, 15, 25, 200));
+            g.fillRoundRect(bx - 12, by - fm.getAscent() - 6,
+                    fm.stringWidth(banner) + 24, fm.getAscent() + 12, 10, 10);
+            g.setColor(new Color(255, 60, 60, alpha));
+            g.drawString(banner, bx, by);
+        }
     }
 
     /**
@@ -153,7 +219,7 @@ public class Rink extends GameObject {
      *       at the horizontal center of the window, vertically centered in the header strip
      */
     private void drawTimer(Graphics g) {
-        g.setFont(new Font("Monospaced", Font.BOLD, 28));
+        g.setFont(RetroFont.get(20f));
         FontMetrics fm = g.getFontMetrics();
         int padX  = 14;
         int padY  = 7;
@@ -166,7 +232,9 @@ public class Rink extends GameObject {
         g.setColor(new Color(10, 15, 25));
         g.fillRect(boxX, boxY, boxW, boxH);
 
-        g.setColor(Color.WHITE);
+        // the timer flashes red in the final seconds for urgency
+        Color timerColor = finalCountdown ? new Color(255, 80, 80) : Color.WHITE;
+        g.setColor(timerColor);
         g.drawRect(boxX, boxY, boxW, boxH);
         g.drawString(timeText, boxX + padX, boxY + padY + fm.getAscent() - 2);
     }
@@ -178,9 +246,9 @@ public class Rink extends GameObject {
      *       drawn above the right label, right-aligned to the label's right edge
      */
     private void drawPlayerScores(Graphics g) {
-        g.setFont(new Font("SansSerif", Font.BOLD, 22));
+        g.setFont(RetroFont.get(18f));
         FontMetrics fm = g.getFontMetrics();
-        int scoreY = rinkY - 24;
+        int scoreY = rinkY - 22;
 
         // player 1 - left side, aligned with the label's left edge
         g.setColor(new Color(100, 150, 230));

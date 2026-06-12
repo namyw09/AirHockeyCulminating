@@ -1,3 +1,21 @@
+# ---------------------------------------------------------------------------
+# yolo_detect.py
+#
+# ATTRIBUTION: This detection script is ADAPTED from Evan Juras'
+# (EdjeElectronics) MIT-licensed "Train and Deploy YOLO Models" tutorial repo.
+# We did not write the core inference loop from scratch; we used it to learn how
+# to run our trained YOLO model on a webcam. Our own original game code is the
+# Java Air Hockey project and candy_battle.py (the minigame logic).
+#
+# Sources:
+#   - Tutorial repo:    https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models
+#   - Original script:  https://raw.githubusercontent.com/EdjeElectronics/Train-and-Deploy-YOLO-Models/refs/heads/main/yolo_detect.py
+#   - Training video:   https://www.youtube.com/watch?v=r0RspiLG260
+#   - Companion guide:  https://www.ejtech.io/learn/train-yolo-models
+#   - Ultralytics YOLO: https://github.com/ultralytics/ultralytics  (docs: https://docs.ultralytics.com/)
+#   - OpenCV:           https://opencv.org/
+# ---------------------------------------------------------------------------
+
 import os
 import sys
 import argparse

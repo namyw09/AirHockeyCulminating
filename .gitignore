@@ -16,6 +16,9 @@ __CREATED_BY_JAVA_LANGUAGE_SERVER__/
 *.tmp
 *.swp
 
+# Runtime-generated match history
+match_history.txt
+
 # YOLO local training artifacts
 yolo/*.zip
 yolo/**/__pycache__/
