@@ -1,30 +1,18 @@
 // Brighton Ng(p4), Youngwoo Nam(p5) ICS3U Culminating Project
 // 2d AirHockey game
-import java.awt.Font;
-
-import javax.swing.UIManager;
-
 public class AirHockeyApp {
 
     /**
      * starts the app at the home screen
      * pre:  none
-     * post: the app theme is applied and the home screen is shown
-     *       the game launches when Play is pressed
+     * post: the home screen is shown and sound is stopped when the app closes
      */
     public static void main(String[] args) {
-        applyAppTheme();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            MusicPlayer.stop();
+            BattleSoundPlayer.stop();
+        }));
         showHome();
-    }
-
-    /**
-     * makes all the popup dialogs match the app
-     * pre:  none
-     * post: message text and buttons use regular built-in Java fonts
-     */
-    private static void applyAppTheme() {
-        UIManager.put("OptionPane.messageFont", new Font("Monospaced", Font.PLAIN, 13));
-        UIManager.put("OptionPane.buttonFont", new Font("SansSerif", Font.BOLD, 12));
     }
 
     /**
@@ -47,5 +35,16 @@ public class AirHockeyApp {
         AirHockeyGame game = new AirHockeyGame();
         game.setVisible(true);
         game.initComponents();
+    }
+
+    /**
+     * closes the app after stopping any background sound
+     * pre:  none
+     * post: music is stopped and the program exits
+     */
+    public static void quit() {
+        MusicPlayer.stop();
+        BattleSoundPlayer.stop();
+        System.exit(0);
     }
 }
