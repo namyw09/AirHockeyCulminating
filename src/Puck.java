@@ -4,7 +4,7 @@ import java.util.Random;
 
 import framework.GameObject;
 
-// the puck - moves around and bounces off walls and paddles
+// the puck - the little disc that flies around and bounces off the walls and paddles
 public class Puck extends GameObject {
 
     private static final int RADIUS   = 14;
@@ -14,7 +14,8 @@ public class Puck extends GameObject {
     private static final double MAX_SPEED   = 17.0;
     private static final double HIT_BOOST   = 1.08;
     private static final double FRICTION    = 0.996;
-    // how much of the paddle's swing speed is transferred to the puck on a hit
+    // how much of the paddle's swing speed gets passed to the puck when you hit it.
+    // played with this number a lot - too high and the puck rockets off uncontrollably
     private static final double SWING_TRANSFER = 0.8;
 
     private double exactX;
@@ -95,25 +96,27 @@ public class Puck extends GameObject {
      *       and puck is pushed outside the paddle so it doesn't get stuck
      */
     public void hitByPaddle(Paddle paddle) {
-        // base direction: bounce the puck off the face of the paddle
+        // first just bounce the puck off whichever side of the paddle it's on
         if (paddle.getX() + paddle.getWidth() / 2 < getCenterX()) {
             xSpeed = Math.abs(xSpeed);
         } else {
             xSpeed = -Math.abs(xSpeed);
         }
 
-        // add the paddle's own motion so swinging into the puck actually drives it,
-        // not just holding the paddle still and letting the puck bounce off
+        // mix in how the paddle was actually moving, so swinging into the puck whacks
+        // it harder instead of it just gently bouncing off a still paddle
         xSpeed = xSpeed + paddle.getVelocityX() * SWING_TRANSFER;
         ySpeed = ySpeed + paddle.getVelocityY() * SWING_TRANSFER;
 
-        // always send the puck away with at least the minimum playable speed
+        // make sure the puck always leaves with at least a playable speed
         if (Math.abs(xSpeed) < MIN_SPEED) {
             xSpeed = (xSpeed < 0) ? -MIN_SPEED : MIN_SPEED;
         }
 
         multiplySpeed(HIT_BOOST);
 
+        // shove the puck just outside the paddle. without this the puck would get stuck
+        // inside the paddle and keep re-colliding, which looked super glitchy
         if (xSpeed > 0) {
             exactX = paddle.getX() + paddle.getWidth() + 1;
         } else {
@@ -239,10 +242,10 @@ public class Puck extends GameObject {
     }
 
     /**
-     * gets how fast the puck is moving as a fraction of its top speed
+     * gets how fast the puck is going as a fraction of its top speed
      * pre:  puck exists
-     * post: returns a value from 0 (stopped) to 1 (at or above MAX_SPEED), used
-     *       to make harder hits sound louder
+     * post: returns 0 (not moving) up to 1 (going max speed or faster). we use this
+     *       to make the harder hits sound louder, which is a nice little touch
      */
     public double getSpeedFraction() {
         double frac = getSpeed() / MAX_SPEED;
@@ -282,7 +285,8 @@ public class Puck extends GameObject {
     /**
      * draws the puck
      * pre:  g is a valid Graphics object
-     * post: puck is drawn as a white circle with a dark grey fill inside
+     * post: draws the puck as a white circle with a dark grey middle so it kind of
+     *       looks like a real hockey puck
      */
     public void paint(Graphics g) {
         g.setColor(Color.WHITE);

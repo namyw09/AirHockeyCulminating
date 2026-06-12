@@ -13,14 +13,15 @@ import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
 
-// plays short retro WAV sound effects with low latency and overlapping playback.
-// WAV files live in assets/audio and are named <effect>.wav (e.g. puck-hit.wav).
-// Uses javax.sound.sampled so effects can overlap and play on any platform.
+// plays the short retro sound effects (the blips and buzzers). the WAV files live in
+// assets/audio and are named like <effect>.wav, e.g. puck-hit.wav. we used
+// javax.sound.sampled instead of afplay here so a bunch of sounds can overlap and it
+// works on any OS, not just mac
 public class SoundEffects {
 
-    // raw bytes of each loaded effect, keyed by name (e.g. "puck-hit")
+    // we cache the loaded bytes so we're not reading the same file off disk over and over
     private static final Map<String, byte[]>  CACHE   = new HashMap<String, byte[]>();
-    // names whose file was missing, so we only check the disk once
+    // remember which files were missing so we don't keep hitting the disk looking for them
     private static final Map<String, Boolean> MISSING = new HashMap<String, Boolean>();
 
     /**
@@ -46,7 +47,7 @@ public class SoundEffects {
 
         final float vol = Math.max(0f, Math.min(1f, volume));
 
-        // open and start on a daemon thread so the game loop never blocks
+        // play it on a separate thread so the game doesn't stutter every time a sound fires
         Thread t = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -65,7 +66,7 @@ public class SoundEffects {
                     });
                     clip.start();
                 } catch (Exception e) {
-                    // ignore audio failures so the game keeps running
+                    // if a sound fails to play, just let it go - not worth crashing the game over
                 }
             }
         });
@@ -86,7 +87,8 @@ public class SoundEffects {
 
         FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 
-        // convert a 0..1 fraction into decibels (0 dB = full volume)
+        // Java wants volume in decibels for some reason, not a simple 0-1, so we have to
+        // convert it. 0 dB ends up being full volume. the log10 math here took some googling
         float dB;
         if (volume <= 0.0001f) {
             dB = gain.getMinimum();

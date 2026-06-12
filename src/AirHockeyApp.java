@@ -18,21 +18,17 @@ public class AirHockeyApp {
     }
 
     /**
-     * applies the retro look to all pop-up dialogs
+     * makes all the popup dialogs match our retro vibe
      * pre:  none
-     * post: JOptionPane message text uses a readable Monospaced font while the
-     *       dialog buttons use the Press Start 2P arcade font; if the theme
-     *       cannot be applied the default look is kept
+     * post: the message text uses a normal Monospaced font but the buttons get
+     *       the Press Start 2P arcade font. we found out the hard way the pixel
+     *       font looks bad on long paragraphs, so only the buttons use it
      */
     private static void applyRetroTheme() {
-        try {
-            // body text stays Monospaced so help/rules paragraphs read clearly
-            UIManager.put("OptionPane.messageFont", new Font("Monospaced", Font.PLAIN, 13));
-            // buttons get the pixel arcade font (short, ASCII-only labels)
-            UIManager.put("OptionPane.buttonFont", RetroFont.get(11f));
-        } catch (Exception e) {
-            // theming is non-critical; fall back to the default dialog look
-        }
+        // keep the body text monospaced so the help/rules walls of text are actually readable
+        UIManager.put("OptionPane.messageFont", new Font("Monospaced", Font.PLAIN, 13));
+        // buttons get the cool pixel font - they're short and ASCII so it doesn't look weird
+        UIManager.put("OptionPane.buttonFont", RetroFont.get(11f));
     }
 
     /**

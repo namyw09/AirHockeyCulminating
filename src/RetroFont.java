@@ -3,7 +3,8 @@ import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.net.URISyntaxException;
 
-// loads and caches the bundled Press Start 2P pixel font for a retro arcade look
+// loads the Press Start 2P pixel font we bundled in, which is what gives the game its
+// retro arcade look. caches it so we only load it off disk once
 public class RetroFont {
 
     // the loaded base font, sized later with deriveFont; null if unavailable
@@ -44,10 +45,10 @@ public class RetroFont {
 
         try {
             baseFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
-            // register so the font is fully usable everywhere in the JVM
+            // gotta register it or Java won't actually let us use it everywhere
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(baseFont);
         } catch (Exception e) {
-            // a missing or invalid font is non-critical; fall back to Monospaced
+            // if the font is missing or broken it's fine, we just use plain Monospaced instead
             baseFont = null;
         }
     }

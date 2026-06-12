@@ -16,7 +16,8 @@ import java.io.InputStreamReader;
 //   - Ultralytics YOLO:      https://github.com/ultralytics/ultralytics  (docs: https://docs.ultralytics.com/)
 public class CandyBattle {
 
-    // python environment used to run the YOLO candy battle script
+    // path to the specific python env that has all the YOLO/camera stuff installed.
+    // hardcoded because setting up the environment was honestly the hardest part of this
     private static final String PYTHON = "/opt/anaconda3/envs/yolo-env1/bin/python";
     private static String lastError = "";
 
@@ -30,7 +31,7 @@ public class CandyBattle {
         lastError = "";
 
         try {
-            // remove any leftover result from a previous battle
+            // wipe out the result file from last time so we don't accidentally read an old winner
             File modelDir = findYoloModelDir();
             File scriptFile = new File(modelDir, "candy_battle.py");
             File modelFile = new File(modelDir, "my_model.pt");
@@ -48,7 +49,8 @@ public class CandyBattle {
             lastError = "Could not open camera. Check macOS Camera permission for the app that launched the game.";
             return 0;
         } catch (Exception e) {
-            // any failure (missing env, no camera, etc.) means no winner
+            // if anything goes wrong (no python, no camera, whatever) just say nobody won
+            // so the match doesn't get stuck waiting forever
             lastError = e.getMessage();
             return 0;
         }

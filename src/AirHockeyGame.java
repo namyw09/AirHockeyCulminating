@@ -246,8 +246,9 @@ public class AirHockeyGame extends Game {
             countdownStartTime = System.currentTimeMillis();
         }
 
-        // hold the match clock at full time while 3-2-1-GO counts down so the
-        // timer only starts ticking once play actually begins
+        // keep the clock frozen at full time during the 3-2-1-GO part. at first the
+        // timer started counting during the countdown which felt unfair, so we just
+        // keep resetting it until play actually starts
         resetGameTimer();
 
         long elapsed = System.currentTimeMillis() - countdownStartTime;
@@ -461,7 +462,8 @@ public class AirHockeyGame extends Game {
                 + "Get ready... the camera opens when you click OK.",
                 "Candy Battle", JOptionPane.INFORMATION_MESSAGE);
 
-        // run the camera/YOLO process off the EDT so the UI thread is not blocked
+        // run the camera/YOLO stuff on its own thread so the whole game doesn't
+        // freeze while the camera is doing its thing
         Thread battleThread = new Thread(() -> {
             // after the player clicks OK on the dialog above, hold for a short
             // silent delay while the camera + model load, then play the item-box
@@ -518,16 +520,16 @@ public class AirHockeyGame extends Game {
     }
 
     /**
-     * stops the match and shows who won
-     * pre:  time is up or someone reached the score limit
-     * post: the game loop stops and the final result pops up
+     * ends the match and shows who won
+     * pre:  time is up or someone hit the score limit
+     * post: the game loop stops and the final result pops up on screen
      */
     private void finishGame(String reason) {
         gameOver = true;
         stopGame();
         updateScoreboard();
 
-            // if condiiton to determine the winner, also checks for tie game possibility
+            // figure out who actually won - and don't forget a tie is possible too
 
         String result;
         if (player1Score > player2Score) {
@@ -538,7 +540,7 @@ public class AirHockeyGame extends Game {
             result = "Tie game!";
         }
 
-        //display the finak score of the game
+        // pop up the final score so everyone can see how it ended
         JOptionPane.showMessageDialog(this,
                 result + "\nFinal Score: " + player1Name + " " + player1Score
                         + " - " + player2Score + " " + player2Name,
@@ -567,7 +569,7 @@ public class AirHockeyGame extends Game {
             fw.write(line + "\n");
             fw.close();
         } catch (IOException e) {
-            // match history is non-critical; ignore write failures
+            // saving history is just a bonus, so if it fails to write we just shrug it off
         }
     }
 
@@ -707,7 +709,8 @@ public class AirHockeyGame extends Game {
             bounced = true;
         }
 
-        // left and right walls - skip if the puck is lined up with the goal
+        // left and right walls - but don't bounce if the puck is lined up with the goal,
+        // otherwise you could never actually score
         if (puck.getX() <= RINK_X && inGoalOpening == false) {
             puck.setPuckX(RINK_X);
             puck.bounceHorizontal();
@@ -840,7 +843,8 @@ public class AirHockeyGame extends Game {
 
         currentPowerup = new Powerup(cx, cy, owner, type, System.currentTimeMillis());
         add(currentPowerup);
-        // place the powerup just above the rink in the z-order so it appears on the ice
+        // drawing order was super confusing at first - this shoves the powerup just
+        // above the rink so it shows up on the ice but still under the puck and paddles
         getContentPane().setComponentZOrder(currentPowerup, getContentPane().getComponentCount() - 2);
     }
 
@@ -984,18 +988,19 @@ public class AirHockeyGame extends Game {
     }
 
     /**
-     * checks whether a paddle touched a puck this frame, including fast swings
+     * checks if a paddle touched the puck this frame, even on really fast swings
      * pre:  paddle and puck exist and have already moved this frame
-     * post: returns true if they overlap now, or if the paddle swept across the
-     *       puck during its movement this frame (so a fast swing can't tunnel past it)
+     * post: returns true if they overlap right now, OR if the paddle swept over the
+     *       puck during this frame. we had a bug where swinging fast made the paddle
+     *       teleport straight through the puck, so this catches that too
      */
     private boolean paddleHitsPuck(Paddle paddle, Puck puck) {
         if (puck.collides(paddle)) {
             return true;
         }
 
-        // rebuild the box the paddle swept through this frame, from its previous
-        // position (current minus this frame's velocity) to its current position
+        // build the box the paddle swept through this frame - basically from where it
+        // was last frame (current minus velocity) to where it is now
         int prevX = paddle.getX() - paddle.getVelocityX();
         int prevY = paddle.getY() - paddle.getVelocityY();
         int boxLeft   = Math.min(paddle.getX(), prevX);

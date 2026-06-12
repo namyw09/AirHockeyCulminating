@@ -5,7 +5,8 @@ import java.awt.Graphics;
 
 import framework.GameObject;
 
-// on-ice powerup token - extends GameObject so collides() works with the puck
+// the powerup token that shows up on the ice. we extend GameObject so we get
+// collides() for free instead of writing our own collision math
 public class Powerup extends GameObject {
 
     public static final int RADIUS        = 18;
@@ -39,7 +40,8 @@ public class Powerup extends GameObject {
         active      = true;
         collected   = false;
 
-        // component is padded 4px each side so the glow ring is not clipped
+        // add 4px of padding on each side, otherwise the glow ring around the icon
+        // gets cut off at the edges of the component (learned that the annoying way)
         setSize(RADIUS * 2 + 8, RADIUS * 2 + 8);
         setX(cx - RADIUS - 4);
         setY(cy - RADIUS - 4);
@@ -100,10 +102,10 @@ public class Powerup extends GameObject {
     }
 
     /**
-     * expires old powerups
-     * pre:  nowMillis is the current wall-clock time from System.currentTimeMillis()
-     * post: if FIELD_LIVE_MS has passed since spawn and the powerup was not collected,
-     *       active is set to false; otherwise no change
+     * makes a powerup disappear if nobody grabbed it in time
+     * pre:  nowMillis is the current time from System.currentTimeMillis()
+     * post: if it's been sitting on the field longer than FIELD_LIVE_MS without being
+     *       collected, we turn it off; otherwise nothing changes
      */
     public void checkExpiry(long nowMillis) {
         if (active && !collected) {
@@ -143,7 +145,7 @@ public class Powerup extends GameObject {
         int cy = RADIUS + 4;
         int r  = RADIUS;
 
-        // pick fill color, glow color, and label based on type
+        // each powerup type gets its own color and label so players can tell them apart
         Color fillColor;
         Color glowColor;
         String label;

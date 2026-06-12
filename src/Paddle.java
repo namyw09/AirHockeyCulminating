@@ -3,7 +3,7 @@ import java.awt.Graphics;
 
 import framework.GameObject;
 
-// one paddle for one player - moves around their half of the rink
+// one paddle for one player - they can only move it around their own half of the rink
 public class Paddle extends GameObject {
 
     private static final int PADDLE_WIDTH  = 16;
@@ -15,7 +15,8 @@ public class Paddle extends GameObject {
     private int currentSpeed = SPEED;
     private long hitFlashStart = 0;
 
-    // how far the paddle center moved on the most recent frame (its swing speed)
+    // how far the paddle moved last frame - basically how hard you're swinging it.
+    // we need this so a fast swing actually launches the puck instead of tapping it
     private int velocityX = 0;
     private int velocityY = 0;
 
@@ -49,7 +50,7 @@ public class Paddle extends GameObject {
         if (left)  { centerX = centerX - currentSpeed; }
         if (right) { centerX = centerX + currentSpeed; }
 
-        // keep the paddle inside its allowed area
+        // don't let the paddle escape its own half - clamp it back inside the bounds
         if (centerX - PADDLE_WIDTH / 2 < minX) {
             centerX = minX + PADDLE_WIDTH / 2;
         }
@@ -99,9 +100,10 @@ public class Paddle extends GameObject {
     }
 
     /**
-     * makes the paddle taller
+     * makes the paddle taller (the size powerup)
      * pre:  paddle is on screen
-     * post: paddle height grows to 1.5x; vertical center is preserved
+     * post: paddle gets 1.5x taller but stays centered where it was, so it doesn't
+     *       suddenly jump up or down
      */
     public void grow() {
         int centerY = getY() + getHeight() / 2;
@@ -123,18 +125,18 @@ public class Paddle extends GameObject {
     }
 
     /**
-     * makes the paddle move faster
+     * makes the paddle zippier (the speed powerup)
      * pre:  paddle exists
-     * post: currentSpeed is set to 1.5x normal; paddle moves faster until revertSpeed()
+     * post: bumps the paddle's speed to 1.5x normal until revertSpeed() puts it back
      */
     public void speedUp() {
         currentSpeed = SPEED * 3 / 2;
     }
 
     /**
-     * makes the paddle move slower
+     * slows the paddle down (this one gets used on your opponent, hehe)
      * pre:  paddle exists
-     * post: currentSpeed is set to 0.75x normal; paddle moves slower until revertSpeed()
+     * post: drops the paddle's speed to 0.75x normal until revertSpeed() fixes it
      */
     public void slowDown() {
         currentSpeed = SPEED * 3 / 4;

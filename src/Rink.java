@@ -5,7 +5,8 @@ import java.awt.Graphics;
 
 import framework.GameObject;
 
-// draws the rink - ice surface, goals, center line, scoreboard, and player labels
+// draws basically everything in the background - the ice, the goals, the center line,
+// the scoreboard up top, and the player name labels
 public class Rink extends GameObject {
 
     private int windowWidth;
@@ -44,7 +45,7 @@ public class Rink extends GameObject {
         player1Name = p1;
         player2Name = p2;
 
-        // sized to the full window so it acts as the background layer
+        // make it the size of the whole window so it works as the background layer
         setSize(ww, wh);
         setX(0);
         setY(0);
@@ -98,22 +99,22 @@ public class Rink extends GameObject {
      * post: the current rink is drawn on screen
      */
     public void paint(Graphics g) {
-        // dark background outside the rink
+        // fill the whole window with the dark background first
         g.setColor(new Color(20, 30, 48));
         g.fillRect(0, 0, windowWidth, windowHeight);
 
-        // slightly darker border behind the ice
+        // a slightly darker rounded rectangle behind the ice, gives it a little border
         g.setColor(new Color(10, 15, 25));
         g.fillRoundRect(rinkX - 10, rinkY - 10, rinkWidth + 20, rinkHeight + 20, 20, 20);
 
-        // ice surface
+        // the actual ice
         g.setColor(new Color(200, 225, 245));
         g.fillRoundRect(rinkX, rinkY, rinkWidth, rinkHeight, 16, 16);
 
         g.setColor(new Color(30, 60, 100));
         g.drawRoundRect(rinkX, rinkY, rinkWidth, rinkHeight, 16, 16);
 
-        // goals on each side
+        // the goal nets, one on each side
         int goalY     = rinkY + (rinkHeight - goalHeight) / 2;
         int goalDepth = 18;
 
@@ -184,13 +185,14 @@ public class Rink extends GameObject {
             return;
         }
 
-        // pulse 0..1 using a sine wave so the border breathes about twice a second
+        // use a sine wave to make the border kind of "breathe" in and out about twice a
+        // second. took some trial and error to get the timing to not look seizure-y
         double phase = (System.currentTimeMillis() % 700) / 700.0;
         float  pulse = (float) (0.35 + 0.65 * Math.abs(Math.sin(phase * Math.PI)));
         int    alpha = (int) (pulse * 200);
 
         g.setColor(new Color(255, 40, 40, alpha));
-        // a few nested rounded rectangles read as a thick glowing border
+        // draw a few rectangles inside each other so it looks like one thick glowy border
         for (int i = 0; i < 4; i++) {
             g.drawRoundRect(rinkX - 6 - i, rinkY - 6 - i,
                     rinkWidth + 12 + i * 2, rinkHeight + 12 + i * 2, 18, 18);

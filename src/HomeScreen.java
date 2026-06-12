@@ -20,7 +20,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 
-// main menu shown before and after each match
+// the main menu - this is what you see before you start and after a match ends
 public class HomeScreen extends JFrame {
 
     private static final int WIDTH  = 800;
@@ -105,11 +105,11 @@ public class HomeScreen extends JFrame {
         btn.setBackground(bg);
         btn.setOpaque(true);
         btn.setFocusPainted(false);
-        // square pixel-style neon border instead of a rounded one
+        // sharp square border, not rounded - looks way more retro/arcade-y
         btn.setBorder(BorderFactory.createLineBorder(NEON_CYAN, 2));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // brighten the button while hovered for an arcade feel
+        // light the button up when you hover over it so it feels clicky
         final Color hover = bg.brighter();
         btn.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
@@ -131,7 +131,7 @@ public class HomeScreen extends JFrame {
      * post: a decorative rink outline is drawn behind the menu content
      */
     private void drawBackground(Graphics g) {
-        // subtle arcade grid across the whole screen
+        // faint grid lines over the whole screen for that arcade look
         g.setColor(GRID_LINE);
         for (int x = 0; x <= WIDTH; x += 40) {
             g.drawLine(x, 0, x, HEIGHT);
@@ -140,7 +140,7 @@ public class HomeScreen extends JFrame {
             g.drawLine(0, y, WIDTH, y);
         }
 
-        // faint rink panel as decoration
+        // draw a faded fake rink behind the menu just to make it look nicer
         g.setColor(new Color(28, 42, 65));
         g.fillRoundRect(60, 60, 680, 480, 20, 20);
 

@@ -1,7 +1,7 @@
 import java.io.File;
 import java.net.URISyntaxException;
 
-// plays a temporary sound layer during the candy battle only
+// plays that extra item-box sound layer, but only while the candy battle is happening
 public class BattleSoundPlayer {
 
     private static Process currentProcess = null;
@@ -34,7 +34,7 @@ public class BattleSoundPlayer {
                     currentProcess.waitFor();
                 } while (path.equals(soundFilePath));
             } catch (Exception e) {
-                // ignore audio failures so the game keeps running
+                // sound's not important enough to crash over, so just ignore any problems
             }
         });
         soundThread.setDaemon(true);

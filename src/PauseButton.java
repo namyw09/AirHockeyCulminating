@@ -7,7 +7,7 @@ import java.awt.event.MouseEvent;
 
 import framework.GameObject;
 
-// pause button that sits in the top-right corner of the game window
+// the little pause button chilling in the top-right corner of the window
 public class PauseButton extends GameObject {
 
     private static final int WIDTH  = 100;
@@ -46,8 +46,8 @@ public class PauseButton extends GameObject {
     /**
      * draws the pause button
      * pre:  g is a valid Graphics object
-     * post: button is drawn as a rounded rectangle with centered PAUSE text;
-     *       background lightens when the mouse hovers over it
+     * post: draws a rounded rectangle with "PAUSE" centered in it, and lightens the
+     *       background when you hover so you can tell it's clickable
      */
     public void paint(Graphics g) {
         g.setColor(hovered ? new Color(60, 90, 140) : new Color(40, 58, 90));

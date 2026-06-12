@@ -1,7 +1,7 @@
 import java.io.File;
 import java.net.URISyntaxException;
 
-// plays background music via macOS afplay; supports fade-out
+// handles the background music using macOS's built-in afplay command. also does fade-outs
 public class MusicPlayer {
 
     private static Process  currentProcess = null;
@@ -10,8 +10,9 @@ public class MusicPlayer {
     private static long     startTimeMillis = 0;
     private static String   currentVolume   = "1.00";
 
-    // afplay runs as a separate OS process, so it keeps playing after the JVM
-    // exits — this shutdown hook kills it no matter how the game is quit
+    // afplay is its own little program outside Java, so it would keep blasting music
+    // even after you closed the game (super annoying to debug). this hook makes sure
+    // it gets killed no matter how you quit
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
     }
@@ -52,16 +53,16 @@ public class MusicPlayer {
         loopThread = new Thread(() -> {
             try {
                 do {
-                    // afplay has no seek option, so each loop plays from the start.
-                    // currentVolume may have been lowered by lowerVolume() in between
-                    // loops, which is how the menu music ducks without being cut off.
+                    // afplay can't seek, so every loop just restarts the track from 0.
+                    // if lowerVolume() got called between loops, currentVolume is quieter
+                    // now - that's our trick for ducking the menu music without cutting it
                     ProcessBuilder pb = new ProcessBuilder("afplay", "-v", currentVolume, path);
                     startTimeMillis = System.currentTimeMillis();
                     currentProcess = pb.start();
                     currentProcess.waitFor();
                 } while (loop && path.equals(musicFilePath));
             } catch (Exception e) {
-                // ignore
+                // if the music dies for some reason, whatever, the game still works fine
             }
         });
         loopThread.setDaemon(true);
@@ -75,10 +76,10 @@ public class MusicPlayer {
      *       takes effect the next time the looping track naturally repeats
      */
     public static void lowerVolume() {
-        // afplay can't change the volume of an already-running process, and it has
-        // no seek option, so we must NOT destroy/restart the process here - doing
-        // that is what made the entry music cut out and jump back to the start.
-        // Instead we just remember the quieter volume for the next loop.
+        // you can't change afplay's volume while it's already running, and it can't
+        // seek either. originally we killed and restarted it here, but that made the
+        // music jump back to the beginning every time, which sounded terrible. so now
+        // we just save the quieter volume and let the next loop pick it up
         currentVolume = "0.20";
     }
 
