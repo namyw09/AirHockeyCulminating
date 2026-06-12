@@ -24,9 +24,6 @@ public class Rink extends GameObject {
     private String timeText = "01:00";
     private String centerMessage = "";
 
-    // atmosphere flag driven by the game in the final seconds of regulation
-    private boolean finalCountdown = false;  // last 5 seconds of regulation
-
 
     /**
      * creates the rink background and saves the player labels
@@ -83,16 +80,6 @@ public class Rink extends GameObject {
     }
 
     /**
-     * turns the final-seconds intensity treatment on or off
-     * pre:  none
-     * post: when on, the rink border pulses red and the timer turns red
-     */
-    public void setFinalCountdown(boolean on) {
-        finalCountdown = on;
-        repaint();
-    }
-
-    /**
      * draws the rink, goals, labels, and scoreboard
      * pre:  the rink dimensions and scoreboard values are set
      * post: the current rink is drawn on screen
@@ -130,9 +117,6 @@ public class Rink extends GameObject {
         g.setColor(new Color(100, 140, 180));
         g.drawLine(centerX, rinkY, centerX, rinkY + rinkHeight);
 
-        // pulsing red border / banner during the final seconds and overtime
-        drawIntensity(g);
-
         drawTimer(g);
         drawPlayerScores(g);
         drawCenterMessage(g);
@@ -159,7 +143,7 @@ public class Rink extends GameObject {
             return;
         }
 
-        g.setFont(RetroFont.get(52f * hudScale()));
+        g.setFont(new Font("SansSerif", Font.BOLD, Math.round(52 * hudScale())));
         FontMetrics fm = g.getFontMetrics();
         int x = rinkX + rinkWidth / 2 - fm.stringWidth(centerMessage) / 2;
         int y = rinkY + rinkHeight / 2 - Math.round(95 * hudScale());
@@ -168,44 +152,19 @@ public class Rink extends GameObject {
         g.fillRoundRect(x - 28, y - fm.getAscent() - 18,
                 fm.stringWidth(centerMessage) + 56, fm.getAscent() + 36, 18, 18);
 
-        // the countdown numbers glow red; normal messages (GO!, etc.) stay white
-        g.setColor(finalCountdown ? new Color(255, 80, 80) : Color.WHITE);
+        g.setColor(Color.WHITE);
         g.drawString(centerMessage, x, y);
     }
 
     /**
-     * draws the final-seconds intensity overlay
-     * pre:  the finalCountdown flag reflects the game state
-     * post: when it's on, a red border pulses around the rink
-     */
-    private void drawIntensity(Graphics g) {
-        if (!finalCountdown) {
-            return;
-        }
-
-        // use a sine wave to make the border kind of "breathe" in and out about twice a
-        // second. took some trial and error to get the timing to not look seizure-y
-        double phase = (System.currentTimeMillis() % 700) / 700.0;
-        float  pulse = (float) (0.35 + 0.65 * Math.abs(Math.sin(phase * Math.PI)));
-        int    alpha = (int) (pulse * 200);
-
-        g.setColor(new Color(255, 40, 40, alpha));
-        // draw a few rectangles inside each other so it looks like one thick glowy border
-        for (int i = 0; i < 4; i++) {
-            g.drawRoundRect(rinkX - 6 - i, rinkY - 6 - i,
-                    rinkWidth + 12 + i * 2, rinkHeight + 12 + i * 2, 18, 18);
-        }
-    }
-
-    /**
-     * draws the retro timer: timeText in a monospaced font centered horizontally in the header,
+     * draws the timer: timeText in a monospaced font centered horizontally in the header,
      * surrounded by a white rectangle
      * pre:  timeText is not null; rinkY defines the available header height
-     * post: a filled rectangle with a white border and retro monospaced time text is painted
+     * post: a filled rectangle with a white border and monospaced time text is painted
      *       at the horizontal center of the window, vertically centered in the header strip
      */
     private void drawTimer(Graphics g) {
-        g.setFont(RetroFont.get(20f * hudScale()));
+        g.setFont(new Font("Monospaced", Font.BOLD, Math.round(20 * hudScale())));
         FontMetrics fm = g.getFontMetrics();
         int padX  = Math.round(14 * hudScale());
         int padY  = Math.round(7 * hudScale());
@@ -218,9 +177,7 @@ public class Rink extends GameObject {
         g.setColor(new Color(10, 15, 25));
         g.fillRect(boxX, boxY, boxW, boxH);
 
-        // the timer flashes red in the final seconds for urgency
-        Color timerColor = finalCountdown ? new Color(255, 80, 80) : Color.WHITE;
-        g.setColor(timerColor);
+        g.setColor(Color.WHITE);
         g.drawRect(boxX, boxY, boxW, boxH);
         g.drawString(timeText, boxX + padX, boxY + padY + fm.getAscent() - 2);
     }
@@ -232,7 +189,7 @@ public class Rink extends GameObject {
      *       drawn above the right label, right-aligned to the label's right edge
      */
     private void drawPlayerScores(Graphics g) {
-        g.setFont(RetroFont.get(18f * hudScale()));
+        g.setFont(new Font("Monospaced", Font.BOLD, Math.round(18 * hudScale())));
         FontMetrics fm = g.getFontMetrics();
         int scoreY = rinkY - Math.round(22 * hudScale());
 

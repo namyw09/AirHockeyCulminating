@@ -61,9 +61,9 @@ public class HomeScreen extends JFrame {
         panel.setLayout(null);
         panel.setBackground(BG_DARK);
 
-        // game title in the pixel arcade font
+        // game title
         title = new JLabel("AIR HOCKEY", SwingConstants.CENTER);
-        title.setFont(RetroFont.get(40f));
+        title.setFont(new Font("SansSerif", Font.BOLD, 40));
         title.setForeground(Color.WHITE);
         panel.add(title);
 
@@ -120,7 +120,7 @@ public class HomeScreen extends JFrame {
             s = 1f;
         }
 
-        title.setFont(RetroFont.get(40f * s));
+        title.setFont(new Font("SansSerif", Font.BOLD, Math.round(40 * s)));
         title.setBounds(0, Math.round(h * 0.16f), w, Math.round(72 * s));
 
         byline.setFont(new Font("Monospaced", Font.PLAIN, Math.round(13 * s)));
@@ -132,13 +132,13 @@ public class HomeScreen extends JFrame {
         int btnX = (w - btnW) / 2;
         int firstY = Math.round(h * 0.46f);
 
-        playBtn.setFont(RetroFont.get(14f * s));
+        playBtn.setFont(new Font("SansSerif", Font.BOLD, Math.round(14 * s)));
         playBtn.setBounds(btnX, firstY, btnW, btnH);
 
-        rulesBtn.setFont(RetroFont.get(14f * s));
+        rulesBtn.setFont(new Font("SansSerif", Font.BOLD, Math.round(14 * s)));
         rulesBtn.setBounds(btnX, firstY + (btnH + gap), btnW, btnH);
 
-        historyBtn.setFont(RetroFont.get(14f * s));
+        historyBtn.setFont(new Font("SansSerif", Font.BOLD, Math.round(14 * s)));
         historyBtn.setBounds(btnX, firstY + 2 * (btnH + gap), btnW, btnH);
 
         panel.repaint();
@@ -151,7 +151,7 @@ public class HomeScreen extends JFrame {
      */
     private JButton makeButton(String text, final Color bg) {
         final JButton btn = new JButton(text);
-        btn.setFont(RetroFont.get(14f));
+        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
         btn.setForeground(Color.WHITE);
         btn.setBackground(bg);
         btn.setOpaque(true);

@@ -53,12 +53,16 @@ parser.add_argument('--source', required=True, help='USB camera source, e.g. "us
 parser.add_argument('--resolution', default='1280x720', help='Resolution WxH, e.g. "1280x720"')
 parser.add_argument('--thresh', default=0.5, help='Minimum confidence threshold')
 parser.add_argument('--result', required=True, help='Path to write the result file')
+parser.add_argument('--p1name', default='Player 1', help='Player 1 display name')
+parser.add_argument('--p2name', default='Player 2', help='Player 2 display name')
 args = parser.parse_args()
 
 model_path = args.model
 img_source = args.source
 min_thresh = float(args.thresh)
 result_path = args.result
+p1_name = args.p1name
+p2_name = args.p2name
 resW, resH = int(args.resolution.split('x')[0]), int(args.resolution.split('x')[1])
 
 split_x = resW // 2  # everything left of this is Player 1, right is Player 2
@@ -164,9 +168,9 @@ while True:
 
     # draw the split line and player labels
     cv2.line(frame, (split_x, 0), (split_x, resH), (255, 255, 255), 2)
-    cv2.putText(frame, 'PLAYER 1', (40, 50),
+    cv2.putText(frame, p1_name, (40, 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.1, (230, 124, 54), 3)
-    cv2.putText(frame, 'PLAYER 2', (split_x + 40, 50),
+    cv2.putText(frame, p2_name, (split_x + 40, 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.1, (60, 70, 220), 3)
 
     # target stays hidden until the reveal
@@ -216,9 +220,13 @@ while not quit_early and time.time() - reveal_start < REVEAL_SECONDS:
 
     if winner == 0:
         outcome = 'NO WINNER'
+    elif winner == 1:
+        outcome = p1_name + ' WINS!'
     else:
-        outcome = 'PLAYER ' + str(winner) + ' WINS!'
-    cv2.putText(frame, outcome, (resW // 2 - 220, resH // 2 + 40),
+        outcome = p2_name + ' WINS!'
+    # center the outcome text so longer names still sit in the middle
+    (text_w, _), _ = cv2.getTextSize(outcome, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 4)
+    cv2.putText(frame, outcome, (resW // 2 - text_w // 2, resH // 2 + 40),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 4)
 
     cv2.imshow(window, frame)

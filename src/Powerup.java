@@ -181,7 +181,7 @@ public class Powerup extends GameObject {
 
         // centered label
         g.setColor(Color.BLACK);
-        g.setFont(RetroFont.get(8f));
+        g.setFont(new Font("SansSerif", Font.BOLD, 8));
         FontMetrics fm = g.getFontMetrics();
         g.drawString(label, cx - fm.stringWidth(label) / 2, cy + fm.getAscent() / 2 - 2);
     }

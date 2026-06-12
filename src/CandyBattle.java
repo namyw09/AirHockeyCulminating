@@ -19,35 +19,37 @@ public class CandyBattle {
     // path to the specific python env that has all the YOLO/camera stuff installed.
     // hardcoded because setting up the environment was honestly the hardest part of this
     private static final String PYTHON = "/opt/anaconda3/envs/yolo-env1/bin/python";
+
+    // the project is always run from its top folder, so this relative path
+    // points straight at the YOLO model files
+    private static final File MODEL_DIR = new File("yolo/my_model");
+
     private static String lastError = "";
 
     /**
      * runs the python candy battle and reads the winner
-     * pre:  the python env, script, model, and a working USB camera are available
+     * pre:  the python env, script, model, and a working USB camera are available;
+     *       p1Name and p2Name are the players' display names
      * post: returns 1 if Player 1 won, 2 if Player 2 won, or 0 if there is no
      *       winner or anything went wrong (so the match never gets stuck)
      */
-    public static int run() {
+    public static int run(String p1Name, String p2Name) {
         lastError = "";
 
+        File scriptFile = new File(MODEL_DIR, "candy_battle.py");
+        File modelFile = new File(MODEL_DIR, "my_model.pt");
+        File resultFile = new File(MODEL_DIR, "candy_result.txt");
+
+        // wipe out the result file from last time so we don't accidentally read an old winner
+        resultFile.delete();
+
         try {
-            // wipe out the result file from last time so we don't accidentally read an old winner
-            File modelDir = findYoloModelDir();
-            File scriptFile = new File(modelDir, "candy_battle.py");
-            File modelFile = new File(modelDir, "my_model.pt");
-            File resultFile = new File(modelDir, "candy_result.txt");
-
-            if (resultFile.exists()) {
-                resultFile.delete();
+            String output = runPythonBattle(scriptFile, modelFile, resultFile, p1Name, p2Name);
+            if (output.indexOf("ERROR: could not open camera") != -1) {
+                lastError = "Could not open camera. Check macOS Camera permission for the app that launched the game.";
+                return 0;
             }
-
-            String output = runPythonBattle("usb0", scriptFile, modelFile, resultFile);
-            if (output.indexOf("ERROR: could not open camera") == -1) {
-                return readWinner(resultFile);
-            }
-
-            lastError = "Could not open camera. Check macOS Camera permission for the app that launched the game.";
-            return 0;
+            return readWinner(resultFile);
         } catch (Exception e) {
             // if anything goes wrong (no python, no camera, whatever) just say nobody won
             // so the match doesn't get stuck waiting forever
@@ -57,18 +59,20 @@ public class CandyBattle {
     }
 
     /**
-     * launches the python battle for one camera source
-     * pre:  source is a camera source understood by candy_battle.py
+     * launches the python battle using the first USB camera
+     * pre:  p1Name and p2Name are the players' display names
      * post: python battle has run once; combined output is printed and returned
      */
-    private static String runPythonBattle(String source, File scriptFile,
-            File modelFile, File resultFile) throws Exception {
+    private static String runPythonBattle(File scriptFile, File modelFile, File resultFile,
+            String p1Name, String p2Name) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(
-                PYTHON, scriptFile.getAbsolutePath(),
-                "--model", modelFile.getAbsolutePath(),
-                "--source", source,
+                PYTHON, scriptFile.getPath(),
+                "--model", modelFile.getPath(),
+                "--source", "usb0",
                 "--resolution", "1280x720",
-                "--result", resultFile.getAbsolutePath());
+                "--result", resultFile.getPath(),
+                "--p1name", p1Name,
+                "--p2name", p2Name);
         pb.redirectErrorStream(true);
 
         Process process = pb.start();
@@ -85,21 +89,6 @@ public class CandyBattle {
         process.waitFor();
 
         return output.toString();
-    }
-
-    /**
-     * finds the moved YOLO model folder inside the project
-     * pre:  the game is running from the compiled bin folder
-     * post: returns the yolo/my_model folder inside the project folder
-     */
-    private static File findYoloModelDir() throws Exception {
-        File binDir = new File(
-                CandyBattle.class.getProtectionDomain()
-                                  .getCodeSource()
-                                  .getLocation()
-                                  .toURI());
-        File projectDir = binDir.getParentFile();
-        return new File(projectDir, "yolo/my_model");
     }
 
     /**

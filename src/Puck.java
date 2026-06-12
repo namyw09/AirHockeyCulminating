@@ -9,22 +9,22 @@ public class Puck extends GameObject {
 
     // base values for the original 800x600 layout; scaled up to fit the window
     private static final int BASE_RADIUS = 14;
-    private static final double BASE_START_SPEED = 11.0;
+    private static final double BASE_SERVE_SPEED = 11.0;
     private static final double BASE_MIN_SPEED   = 9.5;
     private static final double BASE_MAX_SPEED   = 17.0;
-    private static final double HIT_BOOST   = 1.08;
-    private static final double FRICTION    = 0.996;
+    private static final double PADDLE_HIT_BOOST = 1.14;
+    private static final double FRICTION    = 0.998;
+    private static final double PADDLE_SPEED_TRANSFER = 0.95;
 
     // actual sizes/speeds for this match, scaled from the base values above
     private final int    radius;
     private final int    diameter;
-    private final double startSpeed;
+    private final double serveSpeed;
     private final double minSpeed;
     private final double maxSpeed;
-    // how much of the paddle's swing speed gets passed to the puck when you hit it.
-    // played with this number a lot - too high and the puck rockets off uncontrollably
-    private static final double SWING_TRANSFER = 0.8;
 
+    // These store decimal positions so movement stays smooth.
+    // Swing can only draw the puck at whole-number screen positions.
     private double exactX;
     private double exactY;
     private double xSpeed = 0;
@@ -39,7 +39,7 @@ public class Puck extends GameObject {
     public Puck(int centerX, int centerY, double scale) {
         radius     = Math.max(4, (int) Math.round(BASE_RADIUS * scale));
         diameter   = radius * 2;
-        startSpeed = BASE_START_SPEED * scale;
+        serveSpeed = BASE_SERVE_SPEED * scale;
         minSpeed   = BASE_MIN_SPEED * scale;
         maxSpeed   = BASE_MAX_SPEED * scale;
         setSize(diameter, diameter);
@@ -91,14 +91,16 @@ public class Puck extends GameObject {
      * post: puck velocity is set to a playable diagonal serve toward direction
      */
     public void serve(int direction, Random random) {
-        double vertical = 0.30 + random.nextDouble() * 0.45;
-        if (random.nextBoolean()) {
-            vertical = -vertical;
+        double randomUpDownSpeed = 0.30 + random.nextDouble() * 0.45;
+        boolean goingUp = random.nextBoolean();
+
+        if (goingUp) {
+            randomUpDownSpeed = -randomUpDownSpeed;
         }
 
-        xSpeed = startSpeed * direction;
-        ySpeed = startSpeed * vertical;
-        clampSpeed();
+        xSpeed = serveSpeed * direction;
+        ySpeed = serveSpeed * randomUpDownSpeed;
+        limitTopSpeed();
     }
 
     /**
@@ -109,27 +111,28 @@ public class Puck extends GameObject {
      *       and puck is pushed outside the paddle so it doesn't get stuck
      */
     public void hitByPaddle(Paddle paddle) {
-        // first just bounce the puck off whichever side of the paddle it's on
+        // Step 1: send the puck away from the paddle.
         if (paddle.getX() + paddle.getWidth() / 2 < getCenterX()) {
             xSpeed = Math.abs(xSpeed);
         } else {
             xSpeed = -Math.abs(xSpeed);
         }
 
-        // mix in how the paddle was actually moving, so swinging into the puck whacks
-        // it harder instead of it just gently bouncing off a still paddle
-        xSpeed = xSpeed + paddle.getVelocityX() * SWING_TRANSFER;
-        ySpeed = ySpeed + paddle.getVelocityY() * SWING_TRANSFER;
+        // Step 2: a moving paddle gives some of its movement to the puck.
+        xSpeed = xSpeed + paddle.getVelocityX() * PADDLE_SPEED_TRANSFER;
+        ySpeed = ySpeed + paddle.getVelocityY() * PADDLE_SPEED_TRANSFER;
 
-        // make sure the puck always leaves with at least a playable speed
+        // Step 3: make sure the puck does not crawl sideways after a hit.
         if (Math.abs(xSpeed) < minSpeed) {
             xSpeed = (xSpeed < 0) ? -minSpeed : minSpeed;
         }
 
-        multiplySpeed(HIT_BOOST);
+        // Step 4: paddle hits make the puck a little faster.
+        xSpeed = xSpeed * PADDLE_HIT_BOOST;
+        ySpeed = ySpeed * PADDLE_HIT_BOOST;
+        limitTopSpeed();
 
-        // shove the puck just outside the paddle. without this the puck would get stuck
-        // inside the paddle and keep re-colliding, which looked super glitchy
+        // Step 5: move the puck outside the paddle so it does not hit again right away.
         if (xSpeed > 0) {
             exactX = paddle.getX() + paddle.getWidth() + 1;
         } else {
@@ -212,36 +215,27 @@ public class Puck extends GameObject {
      * post: puck slows slightly, but not below minSpeed unless stopped
      */
     private void applyFriction() {
-        double speed = getSpeed();
+        double speed = getCurrentSpeed();
         if (speed <= minSpeed || speed == 0) {
             return;
         }
 
-        multiplySpeed(FRICTION);
-        if (getSpeed() < minSpeed) {
-            setSpeed(minSpeed);
+        xSpeed = xSpeed * FRICTION;
+        ySpeed = ySpeed * FRICTION;
+
+        if (getCurrentSpeed() < minSpeed) {
+            setCurrentSpeed(minSpeed);
         }
     }
 
     /**
-     * multiplies the current velocity
-     * pre:  factor is positive
-     * post: velocity magnitude is multiplied and capped at maxSpeed
-     */
-    private void multiplySpeed(double factor) {
-        xSpeed = xSpeed * factor;
-        ySpeed = ySpeed * factor;
-        clampSpeed();
-    }
-
-    /**
-     * caps the current velocity
+     * limits the puck if it is moving too fast
      * pre:  velocity may be any magnitude
      * post: velocity magnitude is no greater than maxSpeed
      */
-    private void clampSpeed() {
-        if (getSpeed() > maxSpeed) {
-            setSpeed(maxSpeed);
+    private void limitTopSpeed() {
+        if (getCurrentSpeed() > maxSpeed) {
+            setCurrentSpeed(maxSpeed);
         }
     }
 
@@ -250,7 +244,7 @@ public class Puck extends GameObject {
      * pre:  puck exists
      * post: returns the puck's speed in pixels per frame
      */
-    private double getSpeed() {
+    private double getCurrentSpeed() {
         return Math.sqrt(xSpeed * xSpeed + ySpeed * ySpeed);
     }
 
@@ -261,7 +255,7 @@ public class Puck extends GameObject {
      *       to make the harder hits sound louder, which is a nice little touch
      */
     public double getSpeedFraction() {
-        double frac = getSpeed() / maxSpeed;
+        double frac = getCurrentSpeed() / maxSpeed;
         if (frac < 0) {
             frac = 0;
         }
@@ -276,13 +270,13 @@ public class Puck extends GameObject {
      * pre:  speed is non-negative
      * post: puck moves at the requested speed unless it was stopped
      */
-    private void setSpeed(double speed) {
-        double current = getSpeed();
+    private void setCurrentSpeed(double newSpeed) {
+        double current = getCurrentSpeed();
         if (current == 0) {
             return;
         }
 
-        double scale = speed / current;
+        double scale = newSpeed / current;
         xSpeed = xSpeed * scale;
         ySpeed = ySpeed * scale;
     }

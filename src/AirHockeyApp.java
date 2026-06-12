@@ -9,46 +9,32 @@ public class AirHockeyApp {
     /**
      * starts the app at the home screen
      * pre:  none
-     * post: the retro dialog theme is applied and the home screen is shown;
+     * post: the app theme is applied and the home screen is shown
      *       the game launches when Play is pressed
      */
     public static void main(String[] args) {
-        applyRetroTheme();
+        applyAppTheme();
         showHome();
     }
 
     /**
-     * makes all the popup dialogs match our retro vibe
+     * makes all the popup dialogs match the app
      * pre:  none
-     * post: the message text uses a normal Monospaced font but the buttons get
-     *       the Press Start 2P arcade font. we found out the hard way the pixel
-     *       font looks bad on long paragraphs, so only the buttons use it
+     * post: message text and buttons use regular built-in Java fonts
      */
-    private static void applyRetroTheme() {
-        // keep the body text monospaced so the help/rules walls of text are actually readable
+    private static void applyAppTheme() {
         UIManager.put("OptionPane.messageFont", new Font("Monospaced", Font.PLAIN, 13));
-        // buttons get the cool pixel font - they're short and ASCII so it doesn't look weird
-        UIManager.put("OptionPane.buttonFont", RetroFont.get(11f));
+        UIManager.put("OptionPane.buttonFont", new Font("SansSerif", Font.BOLD, 12));
     }
 
     /**
      * opens the home screen with menu music
      * pre:  none
-     * post: a new HomeScreen is created, music plays, and the window is shown
+     * post: a new HomeScreen is created, the menu music starts playing, and the window is shown
      */
     public static void showHome() {
         HomeScreen home = new HomeScreen();
         MusicPlayer.startLoop(MusicPlayer.findThemeFile());
-        home.setVisible(true);
-    }
-
-    /**
-     * opens the home screen without starting music
-     * pre:  none
-     * post: a new HomeScreen is created without music (used when quitting mid-game)
-     */
-    public static void showHomeQuiet() {
-        HomeScreen home = new HomeScreen();
         home.setVisible(true);
     }
 
