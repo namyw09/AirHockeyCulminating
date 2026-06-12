@@ -1,17 +1,14 @@
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
-// plays background music on a loop using macOS's afplay command
+// plays background music with the Mac afplay command
 public class MusicPlayer {
 
     private static Process currentSound = null;
     private static boolean playing = false;
     private static String volume = "1.00";
 
-    /**
-     * pre:  none
-     * post: the given music file starts looping in the background until stop()
-     *       or another track is started; any previous music is stopped
-     */
+    // starts looping one music file
     public static void startLoop(File musicFile) {
         stop();
 
@@ -29,7 +26,6 @@ public class MusicPlayer {
                     currentSound = new ProcessBuilder("afplay", "-v", volume, path).start();
                     currentSound.waitFor();
                 } catch (Exception e) {
-                    // music's not important enough to crash over, so just stop trying
                     playing = false;
                 }
             }
@@ -38,46 +34,38 @@ public class MusicPlayer {
         musicThread.start();
     }
 
-    /**
-     * pre:  none
-     * post: the music keeps playing, but becomes quieter the next time it loops
-     */
+    // makes the next loop quieter
     public static void lowerVolume() {
         volume = "0.20";
     }
 
-    /**
-     * pre:  none
-     * post: the music stops immediately
-     */
+    // stops the current music
     public static void stop() {
         playing = false;
         if (currentSound != null) {
             currentSound.destroy();
+            try {
+                if (!currentSound.waitFor(200, TimeUnit.MILLISECONDS)) {
+                    currentSound.destroyForcibly();
+                }
+            } catch (Exception e) {
+                currentSound.destroyForcibly();
+            }
             currentSound = null;
         }
     }
 
-    /**
-     * pre:  none
-     * post: returns the theme music file in assets/audio
-     */
+    // main menu music
     public static File findThemeFile() {
         return new File("assets/audio/theme.mp3");
     }
 
-    /**
-     * pre:  fileName includes the extension (e.g. "match-music.mp3")
-     * post: returns the file with that name in assets/audio (it may or may not exist)
-     */
+    // gets a file from assets/audio
     public static File findAudio(String fileName) {
         return new File("assets/audio/" + fileName);
     }
 
-    /**
-     * pre:  none
-     * post: returns the battle music file in assets/audio, or null if it does not exist
-     */
+    // main match music
     public static File findBattleMusicFile() {
         File battleMusic = new File("assets/audio/coconut-mall-battle-music.mp3");
         if (battleMusic.exists()) {

@@ -1,28 +1,3 @@
-/*
- * Air Hockey - ICS3U Culminating Project
- * Authors: Brighton Ng + Youngwoo Nam
- *
- * Sources (resources used to learn skills for this project):
- *   The Candy Battle minigame uses a custom YOLO object-detection model we
- *   trained ourselves on 103 photos of candy. The training process was learned from
- *   Evan Juras' (EdjeElectronics) "Train and Deploy YOLO Models" tutorial:
- *     - YOLO training video:    https://www.youtube.com/watch?v=r0RspiLG260
- *     - Tutorial repo:          https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models
- *     - Colab training notebook:https://colab.research.google.com/github/EdjeElectronics/Train-and-Deploy-YOLO-Models/blob/main/Train_YOLO_Models.ipynb
- *     - Label Studio (image labelling): https://labelstud.io/
- *     - Ultralytics YOLO library:       https://github.com/ultralytics/ultralytics
- *     - Ultralytics docs:               https://docs.ultralytics.com/
- *     - OpenCV (camera capture):        https://opencv.org/
- *     - PyTorch (YOLO backend):         https://pytorch.org/get-started/locally/
- *     - Anaconda (Python environment):  https://www.anaconda.com/download
- *
- *   Retro theme assets:
- *     - Pixel font (SIL OFL): https://fonts.google.com/specimen/Press+Start+2P
- *     - Sound effects: generated with https://sfxr.me/ 
- *
- */
-
-
 import java.awt.Color;
 import java.awt.Frame;
 import java.awt.event.MouseAdapter;
