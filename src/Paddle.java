@@ -3,6 +3,7 @@ import java.awt.Graphics;
 
 import framework.GameObject;
 
+// same basic paddle idea from the milestone, now using framework.GameObject
 // one paddle for one player - they can only move it around their own half of the rink
 public class Paddle extends GameObject {
 

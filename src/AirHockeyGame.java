@@ -13,6 +13,9 @@ import framework.Game;
 
 // Brighton ng + Youngwoo nam - ICS3U culminating
 // main game class
+// this is the final version of the milestone GamePanel:
+// it still runs the match, moves paddles/pucks, and checks collisions,
+// but now it also handles goals, timer, pause, powerups, music, and history
 public class AirHockeyGame extends Game {
 
     // base rink dimensions for the original 800x600 layout

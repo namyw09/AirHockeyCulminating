@@ -12,7 +12,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-// the main menu - this is what you see before you start and after a match ends
+// this grew out of the milestone StartPanel
+// it is still the start screen, but now it also has rules and match history
 public class HomeScreen extends JFrame {
 
     /**

@@ -5,8 +5,9 @@ import java.awt.Graphics;
 
 import framework.GameObject;
 
-// draws basically everything in the background - the ice, the goals, the center line,
-// the scoreboard up top, and the player name labels
+// in the milestone, GamePanel drew the rink directly
+// we split it into this class so AirHockeyGame can focus on gameplay
+// this draws the ice, goals, center line, scoreboard, and player labels
 public class Rink extends GameObject {
 
     private int windowWidth;

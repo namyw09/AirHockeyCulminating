@@ -4,6 +4,7 @@ import java.util.Random;
 
 import framework.GameObject;
 
+// same basic puck idea from the milestone, but with smoother movement and faster hits
 // the puck - the little disc that flies around and bounces off the walls and paddles
 public class Puck extends GameObject {
 

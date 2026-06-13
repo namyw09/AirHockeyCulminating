@@ -1,5 +1,7 @@
 // Brighton Ng(p4), Youngwoo Nam(p5) ICS3U Culminating Project
 // 2d AirHockey game
+// This still has the same job as the milestone AirHockeyApp:
+// start the program. The final version also starts menu music and cleans it up.
 public class AirHockeyApp {
 
     /**
