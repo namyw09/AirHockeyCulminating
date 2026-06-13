@@ -44,8 +44,8 @@ public class GamePanel extends Game {
     private static final int SCORE_LIMIT = 7;
 
     private Rink rink;
-    private Paddle playerPaddle;
-    private Paddle opponentPaddle;
+    private Paddle paddle1;
+    private Paddle paddle2;
     private ArrayList<Puck> pucks = new ArrayList<Puck>();
 
     // current score for each player
@@ -132,12 +132,12 @@ public class GamePanel extends Game {
         addPuck(1, false); // Create the first puck, but don't serve or launch it yet because the game hasn't started
 
         int paddleInset = (int) Math.round(80 * scale);
-        playerPaddle = new Paddle(
+        paddle1 = new Paddle(
                 rinkX + paddleInset,
                 rinkCenterY,
                 new Color(54, 124, 230), scale);
 
-        opponentPaddle = new Paddle(
+        paddle2 = new Paddle(
                 rinkRight - paddleInset,
                 rinkCenterY,
                 new Color(220, 70, 60), scale);
@@ -148,8 +148,8 @@ public class GamePanel extends Game {
 
         updateScoreboard();
 
-        add(playerPaddle);
-        add(opponentPaddle);
+        add(paddle1);
+        add(paddle2);
         add(rink);
         rink.setCenterMessage("3");
 
@@ -183,6 +183,16 @@ public class GamePanel extends Game {
             return;
         }
 
+        updateGame();
+    }
+
+    /**
+     * updates the actual match after the countdown is done
+     * pre:  the game has started and time is still left
+     * post: paddles, pucks, goals, collisions, and powerups are checked
+     */
+    private void updateGame() {
+        // same basic order as the milestone: move things, then check what they hit
         handleInput();
         addTimedExtraPucks();
         updatePucks();
@@ -390,12 +400,12 @@ public class GamePanel extends Game {
      * post: each paddle stays inside its side of the rink
      */
     private void handleInput() {
-        playerPaddle.move(
+        paddle1.move(
                 WKeyPressed(), SKeyPressed(), AKeyPressed(), DKeyPressed(),
                 rinkX, rinkCenterX,
                 rinkY, rinkBottom);
 
-        opponentPaddle.move(
+        paddle2.move(
                 UpKeyPressed(), DownKeyPressed(), LeftKeyPressed(), RightKeyPressed(),
                 rinkCenterX, rinkRight,
                 rinkY, rinkBottom);
@@ -628,7 +638,7 @@ public class GamePanel extends Game {
 
     /**
      * manages the full powerup lifecycle each frame: spawning, expiry, collection, and effect revert
-     * pre:  playerPaddle, opponentPaddle, and rink all exist
+     * pre:  paddle1, paddle2, and rink all exist
      * post: grow effects that have expired are reverted; a new powerup spawns after the cooldown;
      *       a powerup that times out is removed; only the owner paddle can collect it
      */
@@ -736,9 +746,9 @@ public class GamePanel extends Game {
      */
     private Paddle getPaddle(int player) {
         if (player == 1) {
-            return playerPaddle;
+            return paddle1;
         }
-        return opponentPaddle;
+        return paddle2;
     }
 
     /**
@@ -760,11 +770,11 @@ public class GamePanel extends Game {
      */
     private void handlePaddleCollisions() {
         for (Puck puck : pucks) {
-            if (paddleHitsPuck(playerPaddle, puck)) {
-                puck.hitByPaddle(playerPaddle);
+            if (paddleHitsPuck(paddle1, puck)) {
+                puck.hitByPaddle(paddle1);
                 SoundEffects.play("puck-hit");
-            } else if (paddleHitsPuck(opponentPaddle, puck)) {
-                puck.hitByPaddle(opponentPaddle);
+            } else if (paddleHitsPuck(paddle2, puck)) {
+                puck.hitByPaddle(paddle2);
                 SoundEffects.play("puck-hit");
             }
         }

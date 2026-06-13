@@ -5,9 +5,9 @@
 public class AirHockeyApp {
 
     /**
-     * starts the app at the home screen
+     * starts the app at the start screen
      * pre:  none
-     * post: the home screen is shown and sound is stopped when the app closes
+     * post: the start screen is shown and sound is stopped when the app closes
      */
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

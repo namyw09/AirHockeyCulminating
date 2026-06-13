@@ -51,7 +51,7 @@ Any new game entity (powerup, obstacle, effect indicator, etc.) should extend `f
 
 **Why:** `GameObject` gives you `collides()` (AABB collision against any other `GameObject`), `setX/setY/setSize`, `repaint()`, and the `act()` hook — all wired into the framework's render and update loop for free. Rolling a plain class or a raw `JComponent` means re-implementing positioning, collision, and repaint integration by hand.
 
-**Z-order rule:** objects added first render on top (lower component index = painted last = front). The permanent draw order is: `puck (front) → playerPaddle → opponentPaddle → rink (back)`. When adding a new `GameObject` dynamically at runtime, call:
+**Z-order rule:** objects added first render on top (lower component index = painted last = front). The permanent draw order is: `puck (front) → paddle1 → paddle2 → rink (back)`. When adding a new `GameObject` dynamically at runtime, call:
 ```java
 add(obj);
 getContentPane().setComponentZOrder(obj, getContentPane().getComponentCount() - 2);

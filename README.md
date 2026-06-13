@@ -14,6 +14,7 @@ This final version is an extension of our milestone Air Hockey project.
 - Milestone `GamePanel` is still `GamePanel`, with the same main game-loop idea plus scoring, timer, pause, powerups, and fullscreen layout.
 - Milestone `Paddle`, `Puck`, and `GameObject` ideas are still here, but now they use the bundled `framework` package so drawing, collision, and timing are cleaner.
 - Rink drawing was split into `Rink` so `GamePanel` can focus more on game rules instead of drawing everything itself.
+- We kept milestone-style names like `paddle1`, `paddle2`, `startButton`, and `howToPlayButton` so the final code still feels connected to the prototype.
 
 ## Build And Run
 

@@ -19,7 +19,7 @@ public class StartPanel extends JFrame {
     /**
      * builds the main menu window
      * pre:  none
-     * post: the home screen window is built with a title, byline, and three buttons
+     * post: the start screen window is built with a title, byline, and three buttons
      */
     public StartPanel() {
         setTitle("Air Hockey");
@@ -40,20 +40,20 @@ public class StartPanel extends JFrame {
         byline.setForeground(Color.LIGHT_GRAY);
         byline.setHorizontalAlignment(JLabel.CENTER);
 
-        JButton playBtn = makeButton("PLAY", () -> {
+        JButton startButton = makeButton("START GAME", () -> {
             MusicPlayer.lowerVolume();
             dispose();
             AirHockeyApp.launchGame();
         });
 
-        JButton rulesBtn = makeButton("RULES", () -> showRules());
-        JButton historyBtn = makeButton("MATCH HISTORY", () -> showHistory());
+        JButton howToPlayButton = makeButton("HOW TO PLAY", () -> showRules());
+        JButton historyButton = makeButton("MATCH HISTORY", () -> showHistory());
 
         panel.add(title);
         panel.add(byline);
-        panel.add(playBtn);
-        panel.add(rulesBtn);
-        panel.add(historyBtn);
+        panel.add(startButton);
+        panel.add(howToPlayButton);
+        panel.add(historyButton);
 
         setContentPane(panel);
     }
@@ -93,7 +93,7 @@ public class StartPanel extends JFrame {
     /**
      * shows saved match history
      * pre:  none
-     * post: reads match_history.txt and displays all past results in a scrollable dialog;
+     * post: reads match_history.txt and displays all past results in a dialog;
      *       shows a message if no matches have been played yet
      */
     private void showHistory() {
