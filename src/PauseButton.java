@@ -14,7 +14,6 @@ public class PauseButton extends GameObject {
     private static final int HEIGHT = 30;
 
     private Runnable onClick;
-    private boolean  hovered = false;
 
     /**
      * creates the pause button and click handler
@@ -32,34 +31,21 @@ public class PauseButton extends GameObject {
             public void mouseClicked(MouseEvent e) {
                 onClick.run();
             }
-            public void mouseEntered(MouseEvent e) {
-                hovered = true;
-                repaint();
-            }
-            public void mouseExited(MouseEvent e) {
-                hovered = false;
-                repaint();
-            }
         });
     }
 
     /**
      * draws the pause button
-     * pre:  g is a valid Graphics object
-     * post: draws a rounded rectangle with "PAUSE" centered in it, and lightens the
-     *       background when you hover so you can tell it's clickable
+     * pre:  none
+     * post: draws a simple pause button
      */
     public void paint(Graphics g) {
-        g.setColor(hovered ? new Color(60, 90, 140) : new Color(40, 58, 90));
+        g.setColor(new Color(40, 58, 90));
         g.fillRoundRect(0, 0, WIDTH, HEIGHT, 8, 8);
 
         g.setColor(Color.WHITE);
         g.setFont(new Font("SansSerif", Font.BOLD, 9));
-        java.awt.FontMetrics fm = g.getFontMetrics();
-        String text = "|| PAUSE";
-        int textX = (WIDTH - fm.stringWidth(text)) / 2;
-        int textY = (HEIGHT + fm.getAscent() - fm.getDescent()) / 2;
-        g.drawString(text, textX, textY);
+        g.drawString("|| PAUSE", 28, 19);
     }
 
     /**
