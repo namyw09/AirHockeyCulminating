@@ -10,7 +10,6 @@ public class AirHockeyApp {
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             MusicPlayer.stop();
-            BattleSoundPlayer.stop();
         }));
         showHome();
     }
@@ -44,7 +43,6 @@ public class AirHockeyApp {
      */
     public static void quit() {
         MusicPlayer.stop();
-        BattleSoundPlayer.stop();
         System.exit(0);
     }
 }

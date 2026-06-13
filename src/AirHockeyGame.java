@@ -1,7 +1,5 @@
 import java.awt.Color;
 import java.awt.Frame;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,7 +9,6 @@ import java.util.Date;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import framework.Game;
 
 // Brighton ng + Youngwoo nam - ICS3U culminating
@@ -44,8 +41,8 @@ public class AirHockeyGame extends Game {
     private static final int SCORE_LIMIT = 7;
 
     private Rink rink;
-    private CursorControlledPaddle playerPaddle;
-    private CursorControlledPaddle opponentPaddle;
+    private Paddle playerPaddle;
+    private Paddle opponentPaddle;
     private ArrayList<Puck> pucks = new ArrayList<Puck>();
 
     // current score for each player
@@ -78,13 +75,6 @@ public class AirHockeyGame extends Game {
     private String player1Name;
     private String player2Name;
 
-    // candy battle minigame state
-    private int     candyBattleTriggerRemaining = 0;     // fires when this many seconds remain
-    private boolean candyBattleDone             = false; // only happens once per match
-    private int     cursorControlPlayer         = 0;     // 0 = none, 1/2 = candy winner uses mouse
-    private int     cursorX                     = 0;     // live mouse position; centered in setup()
-    private int     cursorY                     = 0;
-
     /**
      * sets up the window, timer, player names, and starting objects
      * pre:  the game frame exists but nothing has been added yet
@@ -98,13 +88,12 @@ public class AirHockeyGame extends Game {
         setBackground(new Color(20, 30, 48));
         setDelay(16);
         setMatchLengthSeconds(MATCH_LENGTH_SECONDS);
-        setupMouseTracking();
 
         // show the controls before anything starts
         JOptionPane.showMessageDialog(this,
                 "Player 1 (Blue): W / A / S / D\nPlayer 2 (Red): Arrow Keys\n\n"
-                + "Secret Candy Battle reward: the winner controls their paddle with the mouse for the rest of the match.\n\n"
-                + "Score by hitting the puck into the other side's goal.",
+                + "Score by hitting the puck into the other side's goal.\n"
+                + "Powerups appear on the ice, but each one only works for the player on that side.",
                 "How to Play", JOptionPane.INFORMATION_MESSAGE);
 
         player1Name = promptForName("Enter Player 1's name:");
@@ -136,19 +125,16 @@ public class AirHockeyGame extends Game {
         goalTop     = rinkY + (rinkHeight - goalHeight) / 2;
         goalBottom  = goalTop + goalHeight;
 
-        cursorX = rinkCenterX;
-        cursorY = rinkCenterY;
-
         // puck and paddles are added before the rink
         addPuck(1, false); // Create the first puck, but don't serve or launch it yet because the game hasn't started
 
         int paddleInset = (int) Math.round(80 * scale);
-        playerPaddle = new CursorControlledPaddle(
+        playerPaddle = new Paddle(
                 rinkX + paddleInset,
                 rinkCenterY,
                 new Color(54, 124, 230), scale);
 
-        opponentPaddle = new CursorControlledPaddle(
+        opponentPaddle = new Paddle(
                 rinkRight - paddleInset,
                 rinkCenterY,
                 new Color(220, 70, 60), scale);
@@ -165,9 +151,6 @@ public class AirHockeyGame extends Game {
         rink.setCenterMessage("3");
 
         lastPowerupEndTime = System.currentTimeMillis();
-
-        // candy battle fires once, at a random moment between the 15-30 seconds left on the clock
-        candyBattleTriggerRemaining = 15 + random.nextInt(16);
 
         PauseButton pauseBtn = new PauseButton(windowWidth - 110, 8, () -> showPauseDialog());
         add(pauseBtn);
@@ -193,27 +176,6 @@ public class AirHockeyGame extends Game {
     }
 
     /**
-     * tracks the mouse for cursor-control powerups
-     * pre:  content pane exists
-     * post: latest mouse position is tracked in game-coordinate space
-     */
-    private void setupMouseTracking() {
-        MouseAdapter mouseTracker = new MouseAdapter() {
-            public void mouseMoved(MouseEvent e) {
-                cursorX = e.getX();
-                cursorY = e.getY();
-            }
-
-            public void mouseDragged(MouseEvent e) {
-                cursorX = e.getX();
-                cursorY = e.getY();
-            }
-        };
-
-        getContentPane().addMouseMotionListener(mouseTracker);
-    }
-
-    /**
      * runs one frame of the game
      * pre:  setup() is done and all game objects exist
      * post: movement, goals, and collisions are checked, or the game ends if time/score is up
@@ -234,14 +196,6 @@ public class AirHockeyGame extends Game {
         if (!countdownDone) {
             handleStartCountdown();
             return;
-        }
-
-        // surprise candy battle once the clock drops into the trigger window
-        if (!candyBattleDone
-                && getTimeRemainingSeconds() <= candyBattleTriggerRemaining) {
-            candyBattleDone = true;
-            startCandyBattle();
-            return; // game is paused now; skip the rest of this frame
         }
 
         handleInput();
@@ -364,28 +318,14 @@ public class AirHockeyGame extends Game {
     }
 
     /**
-     * gets a player's display name
-     * pre:  player is 1 or 2
-     * post: returns the matching name from the setup prompt
-     */
-    private String getPlayerName(int player) {
-        if (player == 1) {
-            return player1Name;
-        }
-        return player2Name;
-    }
-
-    /**
      * shows the pause menu and handles the selected action
      * pre:  game is running
-     * post: game is paused and a dialog with Continue / Test Candy Battle / Quit
-     *       is shown; Continue resumes, Test Candy Battle starts the camera
-     *       minigame now, and Quit returns to the home screen with menu music
+     * post: game is paused and the player can continue or quit to the menu
      */
     private void showPauseDialog() {
         pauseGame();
 
-        Object[] options = { "Continue", "Test Candy Battle", "Quit to Menu" };
+        Object[] options = { "Continue", "Quit to Menu" };
         int choice = JOptionPane.showOptionDialog(
                 this,
                 "The game is paused.",
@@ -398,102 +338,11 @@ public class AirHockeyGame extends Game {
 
         if (choice == 0 || choice == JOptionPane.CLOSED_OPTION) {
             resumeGame();
-        } else if (choice == 1) {
-            candyBattleDone = true;
-            startCandyBattle();
         } else {
             MusicPlayer.stop();
             dispose();
             AirHockeyApp.showHome();
         }
-    }
-
-    /**
-     * runs the candy battle and applies its reward
-     * pauses the match and runs the camera candy battle minigame
-     * pre:  the game is running and the YOLO python script is available
-     * post: the game is paused, the python minigame runs on a background thread,
-     *       and once it finishes the winner is announced, the special powerup is
-     *       granted, and the match resumes
-     */
-    private void startCandyBattle() {
-        pauseGame();
-
-        // keep the menu music playing continuously underneath - don't restart it
-
-        JOptionPane.showMessageDialog(this,
-                "CANDY BATTLE!\n\nEach player: hold up your 2 candies to the camera.\n"
-                + "Player 1 on the LEFT, Player 2 on the RIGHT.\n"
-                + "The computer secretly picked one - whoever is holding it wins a special powerup!\n\n"
-                + "Get ready... the camera opens when you click OK.",
-                "Candy Battle", JOptionPane.INFORMATION_MESSAGE);
-
-        // run the camera/YOLO stuff on its own thread so the whole game doesn't
-        // freeze while the camera is doing its thing
-        Thread battleThread = new Thread(() -> {
-            // give the camera/model a second to wake up before the battle sound
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-
-            
-            BattleSoundPlayer.startLoop();
-            int winner = CandyBattle.run(player1Name, player2Name);
-            BattleSoundPlayer.stop();
-
-            SwingUtilities.invokeLater(() -> {
-                if (winner == 1 || winner == 2) {
-                    String name = getPlayerName(winner);
-                    JOptionPane.showMessageDialog(this,
-                            name + " held the right candy and wins a special powerup!",
-                            "Candy Battle Result", JOptionPane.INFORMATION_MESSAGE);
-                    applySpecialPowerup(winner);
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "No winner this round - no special powerup awarded.",
-                            "Candy Battle Result", JOptionPane.INFORMATION_MESSAGE);
-                }
-
-                // swap to the hyped-up track for the rest of the match now that
-                // the candy battle is over
-                startPostCandyMusic();
-
-                resumeGame();
-            });
-        });
-        battleThread.setDaemon(true);
-        battleThread.start();
-    }
-
-    /**
-     * starts the post-candy-battle music loop
-     * pre:  the candy battle just finished
-     * post: the old sudden-death track now loops as the closing-stretch music;
-     *       if the file is missing the current music just keeps playing
-     */
-    private void startPostCandyMusic() {
-        File music = MusicPlayer.findAudio("sudden-death.mp3");
-        if (music != null && music.exists()) {
-            MusicPlayer.startLoop(music);
-        }
-    }
-
-    /**
-     * gives the candy battle winner cursor control
-     * grants the candy battle's special powerup to the winning player
-     * pre:  player is 1 or 2
-     * post: winner controls their paddle with the mouse for the rest of the match
-     */
-    private void applySpecialPowerup(int player) {
-        cursorControlPlayer = player;
-
-        String name = getPlayerName(player);
-
-        JOptionPane.showMessageDialog(this,
-                name + " unlocked cursor control for the rest of the match!",
-                "Secret Powerup", JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
@@ -556,29 +405,15 @@ public class AirHockeyGame extends Game {
      * post: each paddle stays inside its side of the rink
      */
     private void handleInput() {
-        if (cursorControlPlayer == 1) {
-            playerPaddle.followCursor(
-                    cursorX, cursorY,
-                    rinkX, rinkCenterX,
-                    rinkY, rinkBottom);
-        } else {
-            playerPaddle.move(
-                    WKeyPressed(), SKeyPressed(), AKeyPressed(), DKeyPressed(),
-                    rinkX, rinkCenterX,
-                    rinkY, rinkBottom);
-        }
+        playerPaddle.move(
+                WKeyPressed(), SKeyPressed(), AKeyPressed(), DKeyPressed(),
+                rinkX, rinkCenterX,
+                rinkY, rinkBottom);
 
-        if (cursorControlPlayer == 2) {
-            opponentPaddle.followCursor(
-                    cursorX, cursorY,
-                    rinkCenterX, rinkRight,
-                    rinkY, rinkBottom);
-        } else {
-            opponentPaddle.move(
-                    UpKeyPressed(), DownKeyPressed(), LeftKeyPressed(), RightKeyPressed(),
-                    rinkCenterX, rinkRight,
-                    rinkY, rinkBottom);
-        }
+        opponentPaddle.move(
+                UpKeyPressed(), DownKeyPressed(), LeftKeyPressed(), RightKeyPressed(),
+                rinkCenterX, rinkRight,
+                rinkY, rinkBottom);
     }
 
     /**
