@@ -1,6 +1,5 @@
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -15,8 +14,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 
 // the main menu - this is what you see before you start and after a match ends
 public class HomeScreen extends JFrame {
@@ -131,13 +128,7 @@ public class HomeScreen extends JFrame {
             }
             reader.close();
 
-            JTextArea area = new JTextArea(sb.toString());
-            area.setEditable(false);
-
-            JScrollPane scroll = new JScrollPane(area);
-            scroll.setPreferredSize(new Dimension(400, 300));
-
-            JOptionPane.showMessageDialog(this, scroll,
+            JOptionPane.showMessageDialog(this, sb.toString(),
                     "Match History", JOptionPane.PLAIN_MESSAGE);
 
         } catch (FileNotFoundException e) {
