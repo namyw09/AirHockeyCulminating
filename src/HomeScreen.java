@@ -51,21 +51,14 @@ public class HomeScreen extends JFrame {
         byline.setForeground(Color.LIGHT_GRAY);
         byline.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton playBtn = new JButton("PLAY");
-        playBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        playBtn.addActionListener(e -> {
+        JButton playBtn = makeButton("PLAY", () -> {
             MusicPlayer.lowerVolume();
             dispose();
             AirHockeyApp.launchGame();
         });
 
-        JButton rulesBtn = new JButton("RULES");
-        rulesBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        rulesBtn.addActionListener(e -> showRules());
-
-        JButton historyBtn = new JButton("MATCH HISTORY");
-        historyBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        historyBtn.addActionListener(e -> showHistory());
+        JButton rulesBtn = makeButton("RULES", () -> showRules());
+        JButton historyBtn = makeButton("MATCH HISTORY", () -> showHistory());
 
         panel.add(Box.createVerticalGlue());
         panel.add(title);
@@ -79,6 +72,18 @@ public class HomeScreen extends JFrame {
         panel.add(Box.createVerticalGlue());
 
         setContentPane(panel);
+    }
+
+    /**
+     * makes one centered menu button
+     * pre:  text is not empty and action is not null
+     * post: returns a button that runs action when clicked
+     */
+    private JButton makeButton(String text, Runnable action) {
+        JButton button = new JButton(text);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.addActionListener(e -> action.run());
+        return button;
     }
 
     /**

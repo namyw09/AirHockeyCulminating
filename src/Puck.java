@@ -249,23 +249,6 @@ public class Puck extends GameObject {
     }
 
     /**
-     * gets how fast the puck is going as a fraction of its top speed
-     * pre:  puck exists
-     * post: returns 0 (not moving) up to 1 (going max speed or faster). we use this
-     *       to make the harder hits sound louder, which is a nice little touch
-     */
-    public double getSpeedFraction() {
-        double frac = getCurrentSpeed() / maxSpeed;
-        if (frac < 0) {
-            frac = 0;
-        }
-        if (frac > 1) {
-            frac = 1;
-        }
-        return frac;
-    }
-
-    /**
      * changes velocity magnitude while preserving direction
      * pre:  speed is non-negative
      * post: puck moves at the requested speed unless it was stopped

@@ -64,7 +64,7 @@ public class Paddle extends GameObject {
      * pre:  paddle exists
      * post: returns the x coordinate of the paddle's center
      */
-    protected int getCenterX() {
+    private int getCenterX() {
         return getX() + getWidth() / 2;
     }
 
@@ -73,7 +73,7 @@ public class Paddle extends GameObject {
      * pre:  paddle exists
      * post: returns the y coordinate of the paddle's center
      */
-    protected int getCenterY() {
+    private int getCenterY() {
         return getY() + getHeight() / 2;
     }
 
@@ -82,7 +82,7 @@ public class Paddle extends GameObject {
      * pre:  minX, maxX, minY, maxY define the allowed rink area
      * post: paddle moves as close as possible to the requested center point
      */
-    protected void moveCenterTo(int centerX, int centerY, int minX, int maxX, int minY, int maxY) {
+    private void moveCenterTo(int centerX, int centerY, int minX, int maxX, int minY, int maxY) {
         int startCenterX = getCenterX();
         int startCenterY = getCenterY();
         int halfWidth = getWidth() / 2;
@@ -107,16 +107,6 @@ public class Paddle extends GameObject {
         velocityX = centerX - startCenterX;
         velocityY = centerY - startCenterY;
         repaint();
-    }
-
-    /**
-     * records how far the paddle center moved this frame
-     * pre:  vx and vy are the change in center x and y for the current frame
-     * post: the paddle remembers its swing velocity for puck collisions
-     */
-    protected void setVelocity(int vx, int vy) {
-        velocityX = vx;
-        velocityY = vy;
     }
 
     /**

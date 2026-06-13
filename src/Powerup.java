@@ -16,15 +16,13 @@ public class Powerup extends GameObject {
     public static final int RESPAWN_MS    = 6000; // ms to wait before the next spawn
 
     // powerup types
-    public static final int TYPE_SIZE  = 1; // doubles owner paddle height
-    public static final int TYPE_SPEED = 2; // doubles owner paddle speed
-    public static final int TYPE_SLOW  = 3; // halves opponent paddle speed
+    public static final int TYPE_SIZE  = 1; // makes owner paddle taller
+    public static final int TYPE_SPEED = 2; // makes owner paddle faster
+    public static final int TYPE_SLOW  = 3; // slows the other paddle
 
     private int  ownerPlayer; // 1 = left half (player 1), 2 = right half (player 2)
     private int  type;
     private long spawnTime;
-    private boolean active;
-    private boolean collected;
 
     /**
      * creates a powerup token
@@ -38,8 +36,6 @@ public class Powerup extends GameObject {
         ownerPlayer = owner;
         type        = powerupType;
         spawnTime   = spawnMillis;
-        active      = true;
-        collected   = false;
         radius      = Math.max(6, (int) Math.round(RADIUS * scale));
 
         // add 4px of padding on each side, otherwise the glow ring around the icon
@@ -47,24 +43,6 @@ public class Powerup extends GameObject {
         setSize(radius * 2 + 8, radius * 2 + 8);
         setX(cx - radius - 4);
         setY(cy - radius - 4);
-    }
-
-    /**
-     * gets the powerup center x position
-     * pre:  powerup exists
-     * post: returns the horizontal center of the powerup icon on screen
-     */
-    public int getCenterX() {
-        return getX() + radius + 4;
-    }
-
-    /**
-     * gets the powerup center y position
-     * pre:  powerup exists
-     * post: returns the vertical center of the powerup icon on screen
-     */
-    public int getCenterY() {
-        return getY() + radius + 4;
     }
 
     /**
@@ -86,45 +64,12 @@ public class Powerup extends GameObject {
     }
 
     /**
-     * checks whether the powerup is still active
-     * pre:  powerup exists
-     * post: returns true if the icon is still on the field and has not been collected
+     * checks if the icon has been sitting around too long
+     * pre:  nowMillis is the current time
+     * post: returns true when the powerup should disappear
      */
-    public boolean isActive() {
-        return active;
-    }
-
-    /**
-     * checks whether the powerup has been collected
-     * pre:  powerup exists
-     * post: returns true if the owner paddle has already picked up this powerup
-     */
-    public boolean isCollected() {
-        return collected;
-    }
-
-    /**
-     * makes a powerup disappear if nobody grabbed it in time
-     * pre:  nowMillis is the current time from System.currentTimeMillis()
-     * post: if it's been sitting on the field longer than FIELD_LIVE_MS without being
-     *       collected, we turn it off; otherwise nothing changes
-     */
-    public void checkExpiry(long nowMillis) {
-        if (active && !collected) {
-            if (nowMillis - spawnTime >= FIELD_LIVE_MS) {
-                active = false;
-            }
-        }
-    }
-
-    /**
-     * marks the powerup as collected
-     * pre:  powerup is active and on the field
-     * post: collected and active are both set so the icon is removed from play
-     */
-    public void collect() {
-        collected = true;
-        active    = false;
+    public boolean isExpired(long nowMillis) {
+        return nowMillis - spawnTime >= FIELD_LIVE_MS;
     }
 
     /**

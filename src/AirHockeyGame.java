@@ -100,8 +100,8 @@ public class AirHockeyGame extends Game {
         player2Name = promptForName("Enter Player 2's name:");
 
         // now that the window is maximized, stretch the rink to fill the screen
-        int windowWidth  = currentWindowWidth();
-        int windowHeight = currentWindowHeight();
+        int windowWidth  = getContentPane().getWidth();
+        int windowHeight = getContentPane().getHeight();
 
         // sideMargin = empty space on the left and right
         // headerHeight = top strip for scores, timer, and control labels
@@ -155,24 +155,6 @@ public class AirHockeyGame extends Game {
         PauseButton pauseBtn = new PauseButton(windowWidth - 110, 8, () -> showPauseDialog());
         add(pauseBtn);
         getContentPane().setComponentZOrder(pauseBtn, 0);
-    }
-
-    /**
-     * the usable width of the game window
-     * pre:  the window has been maximized
-     * post: returns the content pane width
-     */
-    private int currentWindowWidth() {
-        return getContentPane().getWidth();
-    }
-
-    /**
-     * the usable height of the game window
-     * pre:  the window has been maximized
-     * post: returns the content pane height
-     */
-    private int currentWindowHeight() {
-        return getContentPane().getHeight();
     }
 
     /**
@@ -454,22 +436,15 @@ public class AirHockeyGame extends Game {
     private void addTimedExtraPucks() {
         int remaining = getTimeRemainingSeconds();
 
-        secondPuckAdded = tryAddTimedPuck(secondPuckAdded, remaining, 40, -1);
-        thirdPuckAdded = tryAddTimedPuck(thirdPuckAdded, remaining, 20, 1);
-    }
-
-    /**
-     * adds one extra puck when the clock reaches its spawn time
-     * pre:  remaining is the match time left, spawnTime is the time to add the puck
-     * post: returns true once this puck has been added
-     */
-    private boolean tryAddTimedPuck(boolean alreadyAdded, int remaining, int spawnTime, int direction) {
-        if (alreadyAdded || remaining > spawnTime) {
-            return alreadyAdded;
+        if (!secondPuckAdded && remaining <= 40) {
+            addPuck(-1, true);
+            secondPuckAdded = true;
         }
 
-        addPuck(direction, true);
-        return true;
+        if (!thirdPuckAdded && remaining <= 20) {
+            addPuck(1, true);
+            thirdPuckAdded = true;
+        }
     }
 
     /**
@@ -478,8 +453,8 @@ public class AirHockeyGame extends Game {
      * post: every puck moves and applies its own speed physics
      */
     private void updatePucks() {
-        for (int i = 0; i < pucks.size(); i++) {
-            pucks.get(i).update();
+        for (Puck puck : pucks) {
+            puck.update();
         }
     }
 
@@ -489,8 +464,8 @@ public class AirHockeyGame extends Game {
      * post: each puck is pushed back in bounds and bounces if it hit a wall
      */
     private void handleWallCollisions() {
-        for (int i = 0; i < pucks.size(); i++) {
-            handleWallCollision(pucks.get(i));
+        for (Puck puck : pucks) {
+            handleWallCollision(puck);
         }
     }
 
@@ -534,7 +509,7 @@ public class AirHockeyGame extends Game {
         }
 
         if (bounced) {
-            SoundEffects.play("wall-bounce", 0.5f);
+            SoundEffects.play("wall-bounce");
         }
     }
 
@@ -544,8 +519,8 @@ public class AirHockeyGame extends Game {
      * post: scores update and only the scoring puck resets
      */
     private void handleGoals() {
-        for (int i = 0; i < pucks.size(); i++) {
-            handleGoal(pucks.get(i));
+        for (Puck puck : pucks) {
+            handleGoal(puck);
             if (gameOver) {
                 return;
             }
@@ -622,17 +597,14 @@ public class AirHockeyGame extends Game {
      * post: currentPowerup is set to a new active powerup and added to the game above the rink layer
      */
     private void spawnPowerup() {
-        int half = random.nextInt(2);
-        int owner;
+        int owner = random.nextInt(2) + 1;
         int spawnMinX;
         int spawnMaxX;
 
-        if (half == 0) {
-            owner     = 1;
+        if (owner == 1) {
             spawnMinX = rinkX + 80;
             spawnMaxX = rinkCenterX - (int) Math.round(Powerup.RADIUS * scale);
         } else {
-            owner     = 2;
             spawnMinX = rinkCenterX + (int) Math.round(Powerup.RADIUS * scale);
             spawnMaxX = rinkRight - 80;
         }
@@ -671,12 +643,9 @@ public class AirHockeyGame extends Game {
             return;
         }
 
-        // remove the powerup if it ran out of field time without being collected
-        currentPowerup.checkExpiry(now);
-        if (currentPowerup.isActive() == false && currentPowerup.isCollected() == false) {
-            remove(currentPowerup);
-            lastPowerupEndTime = now;
-            currentPowerup = null;
+        // remove the powerup if nobody grabbed it in time
+        if (currentPowerup.isExpired(now)) {
+            removeCurrentPowerup(now);
             return;
         }
 
@@ -726,7 +695,6 @@ public class AirHockeyGame extends Game {
      * post: the token is gone and the cooldown timer starts
      */
     private void removeCurrentPowerup(long now) {
-        currentPowerup.collect();
         remove(currentPowerup);
         lastPowerupEndTime = now;
         currentPowerup = null;
@@ -788,26 +756,15 @@ public class AirHockeyGame extends Game {
      * post: any puck that hits a paddle moves out, reverses direction, and speeds up slightly
      */
     private void handlePaddleCollisions() {
-        for (int i = 0; i < pucks.size(); i++) {
-            Puck puck = pucks.get(i);
+        for (Puck puck : pucks) {
             if (paddleHitsPuck(playerPaddle, puck)) {
                 puck.hitByPaddle(playerPaddle);
-                playHitSound(puck);
+                SoundEffects.play("puck-hit");
             } else if (paddleHitsPuck(opponentPaddle, puck)) {
                 puck.hitByPaddle(opponentPaddle);
-                playHitSound(puck);
+                SoundEffects.play("puck-hit");
             }
         }
-    }
-
-    /**
-     * plays the puck-hit sound, louder for faster hits
-     * pre:  puck has just been struck this frame
-     * post: the hit sound plays at a volume based on puck speed
-     */
-    private void playHitSound(Puck puck) {
-        float volume = (float) (0.45 + 0.55 * puck.getSpeedFraction());
-        SoundEffects.play("puck-hit", volume);
     }
 
     /**

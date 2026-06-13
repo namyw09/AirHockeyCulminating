@@ -8,10 +8,6 @@ import javax.sound.sampled.Clip;
 public class SoundEffects {
 
     public static void play(String name) {
-        play(name, 1.0f);
-    }
-
-    public static void play(String name, float volume) {
         File soundFile = new File("assets/audio/" + name + ".wav");
         if (!soundFile.exists()) {
             return;
