@@ -245,8 +245,7 @@ public class GamePanel extends Game {
     /**
      * starts the main match music loop once play begins
      * pre:  the opening countdown has finished
-     * post: the match-music track loops (falling back to the coconut-mall track);
-     *       if neither file exists the current menu music simply keeps playing
+     * post: the match music loops; if the file is missing the menu music keeps playing
      */
     private void startMatchMusic() {
         if (matchMusicStarted) {
@@ -254,10 +253,7 @@ public class GamePanel extends Game {
         }
         matchMusicStarted = true;
 
-        File match = MusicPlayer.findAudio("match-music.mp3");
-        if (match == null || !match.exists()) {
-            match = MusicPlayer.findBattleMusicFile(); // coconut-mall fallback
-        }
+        File match = MusicPlayer.findBattleMusicFile();
         if (match != null && match.exists()) {
             MusicPlayer.startLoop(match);
         }

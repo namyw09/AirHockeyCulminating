@@ -6,6 +6,7 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 
 // plays background music using Java sound, so it works on Windows and Mac
+// before i used afplay and i realized it only worked on mac, so now we used clip so it works on both instances
 public class MusicPlayer {
 
     private static Clip currentClip = null;
@@ -14,10 +15,6 @@ public class MusicPlayer {
     // starts looping one music file
     public static void startLoop(File musicFile) {
         stop();
-
-        if (musicFile == null || !musicFile.exists()) {
-            return;
-        }
 
         try {
             AudioInputStream audio = AudioSystem.getAudioInputStream(musicFile);
@@ -30,7 +27,7 @@ public class MusicPlayer {
         }
     }
 
-    // makes the music quieter
+    // a method that makes the music quieter
     public static void lowerVolume() {
         volume = 0.20f;
         if (currentClip != null) {
@@ -49,16 +46,9 @@ public class MusicPlayer {
     }
 
     // main menu music
+    // we have a wav for the main menu (startpanel) and one music for the actual game
     public static File findThemeFile() {
         return new File("assets/audio/theme.wav");
-    }
-
-    // gets a file from assets/audio
-    public static File findAudio(String fileName) {
-        if (fileName.endsWith(".mp3")) {
-            fileName = fileName.substring(0, fileName.length() - 4) + ".wav";
-        }
-        return new File("assets/audio/" + fileName);
     }
 
     // main match music
