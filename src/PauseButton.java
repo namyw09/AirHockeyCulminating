@@ -22,16 +22,16 @@ public class PauseButton extends GameObject {
      */
     public PauseButton(int x, int y, Runnable onClick) {
         this.onClick = onClick;
-        // keep the button size in one spot so it is easy to move around later
+
         setSize(WIDTH, HEIGHT);
         setX(x);
         setY(y);
-        // hand cursor makes it feel like an actual button and not random wall art
+        // hand cursor
         setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                // when this gets clicked, GamePanel handles the actual pause menu
+                // when this gets clicked GamePanel handles the actual pause menu
                 onClick.run();
             }
         });
@@ -39,26 +39,18 @@ public class PauseButton extends GameObject {
 
     /**
      * draws the pause button
-     * pre:  none
-     * post: draws a simple pause button
      */
     public void paint(Graphics g) {
-        // draw the button background first, because text floating in space looks cursed
+        // draw the button background first, because text floating in space looks weird
         g.setColor(new Color(40, 58, 90));
         g.fillRoundRect(0, 0, WIDTH, HEIGHT, 8, 8);
 
-        // small bold text is enough here, no need to make it dramatic
+        // small bold text heree!!
         g.setColor(Color.WHITE);
         g.setFont(new Font("SansSerif", Font.BOLD, 9));
         g.drawString("|| PAUSE", 28, 19);
     }
 
-    /**
-     * leaves the pause button still each frame
-     * pre:  none
-     * post: nothing - the button has no per-frame behavior
-     */
     public void act() {
-        // nothing to update; the pause button is just vibing until someone clicks it
     }
 }
