@@ -7,8 +7,8 @@ import java.io.InputStreamReader;
 // YOLO setup followed Evan Juras' Train and Deploy YOLO Models tutorial.
 public class CandyBattle {
 
-    // Python environment that has YOLO and OpenCV installed.
-    private static final String PYTHON = "/opt/anaconda3/envs/yolo-env1/bin/python";
+    // On Windows, "py" runs the installed Python.
+    private static final String PYTHON = "py";
 
     // The game should be run from the project folder, so this relative path works.
     private static final File MODEL_DIR = new File("yolo/my_model");

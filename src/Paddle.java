@@ -48,32 +48,62 @@ public class Paddle extends GameObject {
     public void move(boolean up, boolean down, boolean left, boolean right,
             int minX, int maxX, int minY, int maxY) {
 
-        int startCenterX = getX() + paddleWidth / 2;
-        int startCenterY = getY() + getHeight() / 2;
-        int centerX = startCenterX;
-        int centerY = startCenterY;
+        int centerX = getCenterX();
+        int centerY = getCenterY();
 
         if (up)    { centerY = centerY - currentSpeed; }
         if (down)  { centerY = centerY + currentSpeed; }
         if (left)  { centerX = centerX - currentSpeed; }
         if (right) { centerX = centerX + currentSpeed; }
 
-        // don't let the paddle escape its own half - clamp it back inside the bounds
-        if (centerX - paddleWidth / 2 < minX) {
-            centerX = minX + paddleWidth / 2;
+        moveCenterTo(centerX, centerY, minX, maxX, minY, maxY);
+    }
+
+    /**
+     * gets the paddle center x
+     * pre:  paddle exists
+     * post: returns the x coordinate of the paddle's center
+     */
+    protected int getCenterX() {
+        return getX() + getWidth() / 2;
+    }
+
+    /**
+     * gets the paddle center y
+     * pre:  paddle exists
+     * post: returns the y coordinate of the paddle's center
+     */
+    protected int getCenterY() {
+        return getY() + getHeight() / 2;
+    }
+
+    /**
+     * moves the paddle center, then keeps it inside the allowed area
+     * pre:  minX, maxX, minY, maxY define the allowed rink area
+     * post: paddle moves as close as possible to the requested center point
+     */
+    protected void moveCenterTo(int centerX, int centerY, int minX, int maxX, int minY, int maxY) {
+        int startCenterX = getCenterX();
+        int startCenterY = getCenterY();
+        int halfWidth = getWidth() / 2;
+        int halfHeight = getHeight() / 2;
+
+        // don't let the paddle escape its own half
+        if (centerX - halfWidth < minX) {
+            centerX = minX + halfWidth;
         }
-        if (centerX + paddleWidth / 2 > maxX) {
-            centerX = maxX - paddleWidth / 2;
+        if (centerX + halfWidth > maxX) {
+            centerX = maxX - halfWidth;
         }
-        if (centerY - getHeight() / 2 < minY) {
-            centerY = minY + getHeight() / 2;
+        if (centerY - halfHeight < minY) {
+            centerY = minY + halfHeight;
         }
-        if (centerY + getHeight() / 2 > maxY) {
-            centerY = maxY - getHeight() / 2;
+        if (centerY + halfHeight > maxY) {
+            centerY = maxY - halfHeight;
         }
 
-        setX(centerX - paddleWidth / 2);
-        setY(centerY - getHeight() / 2);
+        setX(centerX - halfWidth);
+        setY(centerY - halfHeight);
         velocityX = centerX - startCenterX;
         velocityY = centerY - startCenterY;
         repaint();

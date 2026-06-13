@@ -1,13 +1,3 @@
-# ---------------------------------------------------------------------------
-# candy_battle.py
-#
-# This is our OWN ORIGINAL minigame, written by Brighton Ng + Youngwoo Nam for
-# the Air Hockey culminating project. It builds on the same YOLO + OpenCV
-# pipeline we learned from the EdjeElectronics tutorial (argument parsing follows
-# yolo_detect.py's style), but the candy-battle game logic, scoring, countdown,
-# and Java integration are our own work. The YOLO model (my_model.pt) was trained
-# by us on candy photos we captured and labelled.
-#
 # Sources used while building the YOLO side of this project:
 #   - Training video:   https://www.youtube.com/watch?v=r0RspiLG260
 #   - Tutorial repo:    https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models
@@ -19,7 +9,6 @@
 #   - OpenCV:           https://opencv.org/
 #   - PyTorch:          https://pytorch.org/get-started/locally/
 #   - Anaconda:         https://www.anaconda.com/download
-# ---------------------------------------------------------------------------
 
 import os
 import sys
@@ -30,15 +19,9 @@ import time
 import cv2
 from ultralytics import YOLO
 
-# ---------------------------------------------------------------------------
 # Candy Battle minigame for Air Hockey.
-#
 # Splits the USB camera down the middle (left = Player 1, right = Player 2).
-# The computer secretly picks one of 4 candy types. Each player holds up their
-# candy; after a 5 second countdown, whichever player is holding the computer's
-# secret candy wins. The result is written to the file given by --result so the
-# Java game can read the winner.
-# ---------------------------------------------------------------------------
+
 
 CANDIES = ['aero', 'coffee-crisp', 'kitkat', 'smarties']
 

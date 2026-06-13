@@ -1,12 +1,15 @@
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 
-// plays background music with the Mac afplay command
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
+
+// plays background music using Java sound, so it works on Windows and Mac
 public class MusicPlayer {
 
-    private static Process currentSound = null;
-    private static boolean playing = false;
-    private static String volume = "1.00";
+    private static Clip currentClip = null;
+    private static float volume = 1.0f;
 
     // starts looping one music file
     public static void startLoop(File musicFile) {
@@ -16,61 +19,65 @@ public class MusicPlayer {
             return;
         }
 
-        final String path = musicFile.getPath();
-        volume = "1.00";
-        playing = true;
-
-        Thread musicThread = new Thread(() -> {
-            while (playing) {
-                try {
-                    currentSound = new ProcessBuilder("afplay", "-v", volume, path).start();
-                    currentSound.waitFor();
-                } catch (Exception e) {
-                    playing = false;
-                }
-            }
-        });
-        musicThread.setDaemon(true);
-        musicThread.start();
+        try {
+            AudioInputStream audio = AudioSystem.getAudioInputStream(musicFile);
+            currentClip = AudioSystem.getClip();
+            currentClip.open(audio);
+            setClipVolume(currentClip, volume);
+            currentClip.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (Exception e) {
+            currentClip = null;
+        }
     }
 
-    // makes the next loop quieter
+    // makes the music quieter
     public static void lowerVolume() {
-        volume = "0.20";
+        volume = 0.20f;
+        if (currentClip != null) {
+            setClipVolume(currentClip, volume);
+        }
     }
 
     // stops the current music
     public static void stop() {
-        playing = false;
-        if (currentSound != null) {
-            currentSound.destroy();
-            try {
-                if (!currentSound.waitFor(200, TimeUnit.MILLISECONDS)) {
-                    currentSound.destroyForcibly();
-                }
-            } catch (Exception e) {
-                currentSound.destroyForcibly();
-            }
-            currentSound = null;
+        if (currentClip != null) {
+            currentClip.stop();
+            currentClip.close();
+            currentClip = null;
         }
+        volume = 1.0f;
     }
 
     // main menu music
     public static File findThemeFile() {
-        return new File("assets/audio/theme.mp3");
+        return new File("assets/audio/theme.wav");
     }
 
     // gets a file from assets/audio
     public static File findAudio(String fileName) {
+        if (fileName.endsWith(".mp3")) {
+            fileName = fileName.substring(0, fileName.length() - 4) + ".wav";
+        }
         return new File("assets/audio/" + fileName);
     }
 
     // main match music
     public static File findBattleMusicFile() {
-        File battleMusic = new File("assets/audio/coconut-mall-battle-music.mp3");
+        File battleMusic = new File("assets/audio/coconut-mall-battle-music.wav");
         if (battleMusic.exists()) {
             return battleMusic;
         }
         return null;
+    }
+
+    private static void setClipVolume(Clip clip, float amount) {
+        if (!clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+            return;
+        }
+
+        FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+        float safeAmount = Math.max(0.01f, Math.min(1.0f, amount));
+        float decibels = (float) (20.0 * Math.log10(safeAmount));
+        gain.setValue(decibels);
     }
 }

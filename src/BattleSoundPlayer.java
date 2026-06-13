@@ -1,13 +1,15 @@
 import java.io.File;
-import java.util.concurrent.TimeUnit;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 
 // plays the item-box sound during the candy battle
 public class BattleSoundPlayer {
 
-    private static final String SOUND_FILE = "assets/audio/item-box-camera-sound.mp3";
+    private static final String SOUND_FILE = "assets/audio/item-box-camera-sound.wav";
 
-    private static Process currentSound = null;
-    private static boolean keepPlaying = false;
+    private static Clip currentClip = null;
 
     // starts looping the candy battle sound
     public static void startLoop() {
@@ -18,35 +20,22 @@ public class BattleSoundPlayer {
             return;
         }
 
-        keepPlaying = true;
-
-        Thread soundThread = new Thread(() -> {
-            while (keepPlaying) {
-                try {
-                    currentSound = new ProcessBuilder("afplay", soundFile.getPath()).start();
-                    currentSound.waitFor();
-                } catch (Exception e) {
-                    keepPlaying = false;
-                }
-            }
-        });
-        soundThread.setDaemon(true);
-        soundThread.start();
+        try {
+            AudioInputStream audio = AudioSystem.getAudioInputStream(soundFile);
+            currentClip = AudioSystem.getClip();
+            currentClip.open(audio);
+            currentClip.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (Exception e) {
+            currentClip = null;
+        }
     }
 
     // stops the candy battle sound
     public static void stop() {
-        keepPlaying = false;
-        if (currentSound != null) {
-            currentSound.destroy();
-            try {
-                if (!currentSound.waitFor(200, TimeUnit.MILLISECONDS)) {
-                    currentSound.destroyForcibly();
-                }
-            } catch (Exception e) {
-                currentSound.destroyForcibly();
-            }
-            currentSound = null;
+        if (currentClip != null) {
+            currentClip.stop();
+            currentClip.close();
+            currentClip = null;
         }
     }
 }
