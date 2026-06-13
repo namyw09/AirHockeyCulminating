@@ -1,7 +1,5 @@
 import java.awt.Color;
 import java.awt.Frame;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,7 +9,6 @@ import java.util.Date;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import framework.Game;
 
 // Brighton ng + Youngwoo nam - ICS3U culminating
@@ -44,8 +41,8 @@ public class AirHockeyGame extends Game {
     private static final int SCORE_LIMIT = 7;
 
     private Rink rink;
-    private CursorControlledPaddle playerPaddle;
-    private CursorControlledPaddle opponentPaddle;
+    private Paddle playerPaddle;
+    private Paddle opponentPaddle;
     private ArrayList<Puck> pucks = new ArrayList<Puck>();
 
     // current score for each player
@@ -55,22 +52,17 @@ public class AirHockeyGame extends Game {
 
     private boolean matchMusicStarted  = false;  // true once the main match loop has begun
 
-    // powerup state
-    private Powerup currentPowerup       = null;
-    private long    lastPowerupEndTime   = 0;
-    private boolean player1Grown         = false;
-    private long    player1GrowStart     = 0;
-    private boolean player2Grown         = false;
-    private long    player2GrowStart     = 0;
-    private boolean playerPaddleSpeedy   = false;
-    private long    playerSpeedyStart    = 0;
-    private boolean opponentPaddleSpeedy = false;
-    private long    opponentSpeedyStart  = 0;
-    private boolean playerPaddleSlowed   = false;
-    private long    playerSlowedStart    = 0;
-    private boolean opponentPaddleSlowed = false;
-    private long    opponentSlowedStart  = 0;
-    private Random  random               = new Random();
+    // powerup state. The arrays use player numbers directly, so index 1 is
+    // player 1 and index 2 is player 2. Index 0 is unused on purpose.
+    private Powerup currentPowerup = null;
+    private long lastPowerupEndTime = 0;
+    private boolean[] grown = new boolean[3];
+    private long[] growStart = new long[3];
+    private boolean[] speedy = new boolean[3];
+    private long[] speedyStart = new long[3];
+    private boolean[] slowed = new boolean[3];
+    private long[] slowedStart = new long[3];
+    private Random random = new Random();
 
     // opening and multi-puck pacing
     private static final int COUNTDOWN_MS = 3200;
@@ -82,13 +74,6 @@ public class AirHockeyGame extends Game {
     // set from the name prompt in setup() before play begins
     private String player1Name;
     private String player2Name;
-
-    // candy battle minigame state
-    private int     candyBattleTriggerRemaining = 0;     // fires when this many seconds remain
-    private boolean candyBattleDone             = false; // only happens once per match
-    private int     cursorControlPlayer         = 0;     // 0 = none, 1/2 = candy winner uses mouse
-    private int     cursorX                     = 0;     // live mouse position; centered in setup()
-    private int     cursorY                     = 0;
 
     /**
      * sets up the window, timer, player names, and starting objects
@@ -103,25 +88,24 @@ public class AirHockeyGame extends Game {
         setBackground(new Color(20, 30, 48));
         setDelay(16);
         setMatchLengthSeconds(MATCH_LENGTH_SECONDS);
-        setupMouseTracking();
 
         // show the controls before anything starts
         JOptionPane.showMessageDialog(this,
                 "Player 1 (Blue): W / A / S / D\nPlayer 2 (Red): Arrow Keys\n\n"
-                + "Secret Candy Battle reward: the winner controls their paddle with the mouse for the rest of the match.\n\n"
-                + "Score by hitting the puck into the other side's goal.",
+                + "Score by hitting the puck into the other side's goal.\n"
+                + "Powerups appear on the ice, but each one only works for the player on that side.",
                 "How to Play", JOptionPane.INFORMATION_MESSAGE);
 
         player1Name = promptForName("Enter Player 1's name:");
         player2Name = promptForName("Enter Player 2's name:");
 
-        // now that the window is maximized, stretch the rink to fill the screen,
+        // now that the window is maximized, stretch the rink to fill the screen
         int windowWidth  = currentWindowWidth();
         int windowHeight = currentWindowHeight();
 
-        //sideMargin — empty space on tshe left and right
-        // headerHeight — the strip up top for the scoreboard, timer, and the W/A/S/D / Arrows control labels
-        // bottomMargin — a little breathing room beneath the rink
+        // sideMargin = empty space on the left and right
+        // headerHeight = top strip for scores, timer, and control labels
+        // bottomMargin = a little breathing room under the rink
         int sideMargin   = windowWidth / 25;
         int headerHeight = windowHeight / 8;
         int bottomMargin = windowHeight / 20;
@@ -141,19 +125,16 @@ public class AirHockeyGame extends Game {
         goalTop     = rinkY + (rinkHeight - goalHeight) / 2;
         goalBottom  = goalTop + goalHeight;
 
-        cursorX = rinkCenterX;
-        cursorY = rinkCenterY;
-
         // puck and paddles are added before the rink
         addPuck(1, false); // Create the first puck, but don't serve or launch it yet because the game hasn't started
 
         int paddleInset = (int) Math.round(80 * scale);
-        playerPaddle = new CursorControlledPaddle(
+        playerPaddle = new Paddle(
                 rinkX + paddleInset,
                 rinkCenterY,
                 new Color(54, 124, 230), scale);
 
-        opponentPaddle = new CursorControlledPaddle(
+        opponentPaddle = new Paddle(
                 rinkRight - paddleInset,
                 rinkCenterY,
                 new Color(220, 70, 60), scale);
@@ -171,14 +152,9 @@ public class AirHockeyGame extends Game {
 
         lastPowerupEndTime = System.currentTimeMillis();
 
-        // candy battle fires once, at a random moment between the 15-30 seconds left on the clock
-        candyBattleTriggerRemaining = 15 + random.nextInt(16);
-
         PauseButton pauseBtn = new PauseButton(windowWidth - 110, 8, () -> showPauseDialog());
         add(pauseBtn);
         getContentPane().setComponentZOrder(pauseBtn, 0);
-
-        // TODO for youngwoo: explain this above thingy 
     }
 
     /**
@@ -197,27 +173,6 @@ public class AirHockeyGame extends Game {
      */
     private int currentWindowHeight() {
         return getContentPane().getHeight();
-    }
-
-    /**
-     * tracks the mouse for cursor-control powerups
-     * pre:  content pane exists
-     * post: latest mouse position is tracked in game-coordinate space
-     */
-    private void setupMouseTracking() {
-        MouseAdapter mouseTracker = new MouseAdapter() {
-            public void mouseMoved(MouseEvent e) {
-                cursorX = e.getX();
-                cursorY = e.getY();
-            }
-
-            public void mouseDragged(MouseEvent e) {
-                cursorX = e.getX();
-                cursorY = e.getY();
-            }
-        };
-
-        getContentPane().addMouseMotionListener(mouseTracker);
     }
 
     /**
@@ -243,14 +198,6 @@ public class AirHockeyGame extends Game {
             return;
         }
 
-        // surprise candy battle once the clock drops into the trigger window
-        if (!candyBattleDone
-                && getTimeRemainingSeconds() <= candyBattleTriggerRemaining) {
-            candyBattleDone = true;
-            startCandyBattle();
-            return; // game is paused now; skip the rest of this frame
-        }
-
         handleInput();
         addTimedExtraPucks();
         updatePucks();
@@ -273,8 +220,7 @@ public class AirHockeyGame extends Game {
             countdownStartTime = System.currentTimeMillis();
         }
 
-        // keep the clock frozen at full time during the 3-2-1-GO part. at first the timer started counting during the countdown, so we had to pause it until play actually starts
-
+        // freeze the clock during 3-2-1-GO so nobody loses time before play starts
         resetGameTimer();
 
         long elapsed = System.currentTimeMillis() - countdownStartTime;
@@ -342,9 +288,8 @@ public class AirHockeyGame extends Game {
     private String promptForName(String message) {
         String name = "";
 
-
-
-        // When we were giving out the game for Michael, Raymond and other people to test, we found that a lot of them don't type in their username. When the computer writes to the match history file, there's no name. We made a while loop to ensure that all players have their username, and we also normalized the null to an empty string so that it doesn't break the code or the system. We loop until the user gives us a valid name 
+        // Our testers kept leaving names blank, which made the history file look
+        // weird. This keeps asking until the player gives us something usable.
         while (name.trim().isEmpty()) {
             name = JOptionPane.showInputDialog(this,
                     message, "Player Names", JOptionPane.PLAIN_MESSAGE);
@@ -375,14 +320,12 @@ public class AirHockeyGame extends Game {
     /**
      * shows the pause menu and handles the selected action
      * pre:  game is running
-     * post: game is paused and a dialog with Continue / Test Candy Battle / Quit
-     *       is shown; Continue resumes, Test Candy Battle starts the camera
-     *       minigame now, and Quit returns to the home screen with menu music
+     * post: game is paused and the player can continue or quit to the menu
      */
     private void showPauseDialog() {
         pauseGame();
 
-        Object[] options = { "Continue", "Test Candy Battle", "Quit to Menu" };
+        Object[] options = { "Continue", "Quit to Menu" };
         int choice = JOptionPane.showOptionDialog(
                 this,
                 "The game is paused.",
@@ -395,114 +338,11 @@ public class AirHockeyGame extends Game {
 
         if (choice == 0 || choice == JOptionPane.CLOSED_OPTION) {
             resumeGame();
-        } else if (choice == 1) {
-            candyBattleDone = true;
-            startCandyBattle();
         } else {
             MusicPlayer.stop();
             dispose();
             AirHockeyApp.showHome();
         }
-    }
-
-    /**
-     * runs the candy battle and applies its reward
-     * pauses the match and runs the camera candy battle minigame
-     * pre:  the game is running and the YOLO python script is available
-     * post: the game is paused, the python minigame runs on a background thread,
-     *       and once it finishes the winner is announced, the special powerup is
-     *       granted, and the match resumes
-     */
-    private void startCandyBattle() {
-        pauseGame();
-
-        // keep the menu music playing continuously underneath - don't restart it
-
-        JOptionPane.showMessageDialog(this,
-                "CANDY BATTLE!\n\nEach player: hold up your 2 candies to the camera.\n"
-                + "Player 1 on the LEFT, Player 2 on the RIGHT.\n"
-                + "The computer secretly picked one - whoever is holding it wins a special powerup!\n\n"
-                + "Get ready... the camera opens when you click OK.",
-                "Candy Battle", JOptionPane.INFORMATION_MESSAGE);
-
-        // run the camera/YOLO stuff on its own thread so the whole game doesn't
-        // freeze while the camera is doing its thing
-        Thread battleThread = new Thread(() -> {
-            // after the player clicks OK on the dialog above, hold for a short
-            // silent delay while the camera + model load, then play the item-box
-            // sound right as the camera opens
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-
-            
-            BattleSoundPlayer.startLoop();
-            int winner = CandyBattle.run(player1Name, player2Name);
-            BattleSoundPlayer.stop();
-
-            SwingUtilities.invokeLater(() -> {
-                if (winner == 1 || winner == 2) {
-                    String name;
-                    if (winner == 1) {
-                        name = player1Name;
-                    } else {
-                        name = player2Name;
-                    }
-                    JOptionPane.showMessageDialog(this,
-                            name + " held the right candy and wins a special powerup!",
-                            "Candy Battle Result", JOptionPane.INFORMATION_MESSAGE);
-                    applySpecialPowerup(winner);
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "No winner this round - no special powerup awarded.",
-                            "Candy Battle Result", JOptionPane.INFORMATION_MESSAGE);
-                }
-
-                // swap to the hyped-up track for the rest of the match now that
-                // the candy battle is over
-                startPostCandyMusic();
-
-                resumeGame();
-            });
-        });
-        battleThread.setDaemon(true);
-        battleThread.start();
-    }
-
-    /**
-     * starts the post-candy-battle music loop
-     * pre:  the candy battle just finished
-     * post: the old sudden-death track now loops as the closing-stretch music;
-     *       if the file is missing the current music just keeps playing
-     */
-    private void startPostCandyMusic() {
-        File music = MusicPlayer.findAudio("sudden-death.mp3");
-        if (music != null && music.exists()) {
-            MusicPlayer.startLoop(music);
-        }
-    }
-
-    /**
-     * gives the candy battle winner cursor control
-     * grants the candy battle's special powerup to the winning player
-     * pre:  player is 1 or 2
-     * post: winner controls their paddle with the mouse for the rest of the match
-     */
-    private void applySpecialPowerup(int player) {
-        cursorControlPlayer = player;
-
-        String name;
-        if (player == 1) {
-            name = player1Name;
-        } else {
-            name = player2Name;
-        }
-
-        JOptionPane.showMessageDialog(this,
-                name + " unlocked cursor control for the rest of the match!",
-                "Secret Powerup", JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
@@ -515,7 +355,7 @@ public class AirHockeyGame extends Game {
         stopGame();
         updateScoreboard();
 
-            // figure out who actually won - and don't forget a tie is possible too
+        // figure out who actually won - and don't forget a tie is possible too
 
         String result;
         if (player1Score > player2Score) {
@@ -565,29 +405,15 @@ public class AirHockeyGame extends Game {
      * post: each paddle stays inside its side of the rink
      */
     private void handleInput() {
-        if (cursorControlPlayer == 1) {
-            playerPaddle.followCursor(
-                    cursorX, cursorY,
-                    rinkX, rinkCenterX,
-                    rinkY, rinkBottom);
-        } else {
-            playerPaddle.move(
-                    WKeyPressed(), SKeyPressed(), AKeyPressed(), DKeyPressed(),
-                    rinkX, rinkCenterX,
-                    rinkY, rinkBottom);
-        }
+        playerPaddle.move(
+                WKeyPressed(), SKeyPressed(), AKeyPressed(), DKeyPressed(),
+                rinkX, rinkCenterX,
+                rinkY, rinkBottom);
 
-        if (cursorControlPlayer == 2) {
-            opponentPaddle.followCursor(
-                    cursorX, cursorY,
-                    rinkCenterX, rinkRight,
-                    rinkY, rinkBottom);
-        } else {
-            opponentPaddle.move(
-                    UpKeyPressed(), DownKeyPressed(), LeftKeyPressed(), RightKeyPressed(),
-                    rinkCenterX, rinkRight,
-                    rinkY, rinkBottom);
-        }
+        opponentPaddle.move(
+                UpKeyPressed(), DownKeyPressed(), LeftKeyPressed(), RightKeyPressed(),
+                rinkCenterX, rinkRight,
+                rinkY, rinkBottom);
     }
 
     /**
@@ -675,11 +501,7 @@ public class AirHockeyGame extends Game {
      */
     private void handleWallCollision(Puck puck) {
         int puckDiameter = puck.getRadius() * 2;
-
-        boolean inGoalOpening = false;
-        if (puck.getCenterY() >= goalTop && puck.getCenterY() <= goalBottom) {
-            inGoalOpening = true;
-        }
+        boolean inGoalOpening = isInGoalOpening(puck);
 
         boolean bounced = false;
 
@@ -737,13 +559,7 @@ public class AirHockeyGame extends Game {
      */
     private void handleGoal(Puck puck) {
         int puckDiameter = puck.getRadius() * 2;
-
-        boolean inGoalOpening = false;
-        if (puck.getCenterY() >= goalTop && puck.getCenterY() <= goalBottom) {
-            inGoalOpening = true;
-        }
-
-        if (inGoalOpening == false) {
+        if (isInGoalOpening(puck) == false) {
             return;
         }
 
@@ -769,6 +585,15 @@ public class AirHockeyGame extends Game {
     }
 
     /**
+     * checks if the puck is lined up with the goal opening
+     * pre:  puck exists
+     * post: returns true if the puck center is between the top and bottom of the goal
+     */
+    private boolean isInGoalOpening(Puck puck) {
+        return puck.getCenterY() >= goalTop && puck.getCenterY() <= goalBottom;
+    }
+
+    /**
      * shared reaction to any goal being scored
      * pre:  a score was just incremented
      * post: the goal sound plays and the scoreboard updates; the match ends if
@@ -787,7 +612,7 @@ public class AirHockeyGame extends Game {
      */
     private void checkScoreLimit() {
         if (player1Score >= SCORE_LIMIT || player2Score >= SCORE_LIMIT) {
-            finishGame("Scoref Limit Reached");
+            finishGame("Score Limit Reached");
         }
     }
 
@@ -835,35 +660,8 @@ public class AirHockeyGame extends Game {
     private void handlePowerup() {
         long now = System.currentTimeMillis();
 
-        // revert size effects
-        if (player1Grown && now - player1GrowStart >= Powerup.EFFECT_MS) {
-            playerPaddle.revert();
-            player1Grown = false;
-        }
-        if (player2Grown && now - player2GrowStart >= Powerup.EFFECT_MS) {
-            opponentPaddle.revert();
-            player2Grown = false;
-        }
-
-        // revert speed effects
-        if (playerPaddleSpeedy && now - playerSpeedyStart >= Powerup.EFFECT_MS) {
-            playerPaddle.revertSpeed();
-            playerPaddleSpeedy = false;
-        }
-        if (opponentPaddleSpeedy && now - opponentSpeedyStart >= Powerup.EFFECT_MS) {
-            opponentPaddle.revertSpeed();
-            opponentPaddleSpeedy = false;
-        }
-
-        // revert slow effects
-        if (playerPaddleSlowed && now - playerSlowedStart >= Powerup.EFFECT_MS) {
-            playerPaddle.revertSpeed();
-            playerPaddleSlowed = false;
-        }
-        if (opponentPaddleSlowed && now - opponentSlowedStart >= Powerup.EFFECT_MS) {
-            opponentPaddle.revertSpeed();
-            opponentPaddleSlowed = false;
-        }
+        // clean up old effects before checking the powerup on the rink
+        updatePowerupTimers(now);
 
         // spawn a new powerup once the cooldown has passed and none is on the field
         if (currentPowerup == null) {
@@ -883,56 +681,105 @@ public class AirHockeyGame extends Game {
         }
 
         int owner = currentPowerup.getOwnerPlayer();
-        boolean collectedByOwner = false;
-
-        if (owner == 1 && playerPaddle.collides(currentPowerup)) {
-            collectedByOwner = true;
-        }
-        if (owner == 2 && opponentPaddle.collides(currentPowerup)) {
-            collectedByOwner = true;
-        }
+        boolean collectedByOwner = getPaddle(owner).collides(currentPowerup);
 
         if (collectedByOwner) {
-            int type  = currentPowerup.getType();
+            int type = currentPowerup.getType();
 
             // retro chime when a player scoops up a powerup
             SoundEffects.play("powerup");
 
-            currentPowerup.collect();
-            remove(currentPowerup);
-            lastPowerupEndTime = now;
-            currentPowerup     = null;
+            removeCurrentPowerup(now);
+            applyPowerup(owner, type, now);
+        }
+    }
 
-            // ownerPaddle benefits; targetPaddle is the opponent for slow effects
-            Paddle ownerPaddle  = (owner == 1) ? playerPaddle   : opponentPaddle;
-            Paddle targetPaddle = (owner == 1) ? opponentPaddle : playerPaddle;
+    /**
+     * checks if a player's temporary effects are done
+     * pre:  now is the current time
+     * post: expired grow/speed/slow effects are removed
+     */
+    private void updatePowerupTimers(long now) {
+        for (int player = 1; player <= 2; player++) {
+            Paddle paddle = getPaddle(player);
 
-            if (type == Powerup.TYPE_SIZE) {
-                ownerPaddle.grow();
-                if (owner == 1) { player1Grown = true; player1GrowStart = now; }
-                else            { player2Grown = true; player2GrowStart = now; }
+            if (grown[player] && now - growStart[player] >= Powerup.EFFECT_MS) {
+                paddle.revert();
+                grown[player] = false;
+            }
 
-            } else if (type == Powerup.TYPE_SPEED) {
-                ownerPaddle.speedUp();
-                if (owner == 1) {
-                    playerPaddleSpeedy = true;  playerSpeedyStart  = now;
-                    playerPaddleSlowed = false; // cancel any slow on the same paddle
-                } else {
-                    opponentPaddleSpeedy = true;  opponentSpeedyStart  = now;
-                    opponentPaddleSlowed = false;
-                }
+            if (speedy[player] && now - speedyStart[player] >= Powerup.EFFECT_MS) {
+                paddle.revertSpeed();
+                speedy[player] = false;
+            }
 
-            } else if (type == Powerup.TYPE_SLOW) {
-                targetPaddle.slowDown();
-                if (owner == 1) {
-                    opponentPaddleSlowed = true;  opponentSlowedStart  = now;
-                    opponentPaddleSpeedy = false; // cancel any speed on the same paddle
-                } else {
-                    playerPaddleSlowed = true;  playerSlowedStart  = now;
-                    playerPaddleSpeedy = false;
-                }
+            if (slowed[player] && now - slowedStart[player] >= Powerup.EFFECT_MS) {
+                paddle.revertSpeed();
+                slowed[player] = false;
             }
         }
+    }
+
+    /**
+     * removes the visible powerup token from the game
+     * pre:  currentPowerup is not null
+     * post: the token is gone and the cooldown timer starts
+     */
+    private void removeCurrentPowerup(long now) {
+        currentPowerup.collect();
+        remove(currentPowerup);
+        lastPowerupEndTime = now;
+        currentPowerup = null;
+    }
+
+    /**
+     * applies the collected powerup to the right paddle
+     * pre:  owner is 1 or 2 and type is one of the Powerup constants
+     * post: the effect is applied and its timer starts
+     */
+    private void applyPowerup(int owner, int type, long now) {
+        Paddle ownerPaddle = getPaddle(owner);
+        int opponent = otherPlayer(owner);
+
+        if (type == Powerup.TYPE_SIZE) {
+            ownerPaddle.grow();
+            grown[owner] = true;
+            growStart[owner] = now;
+        } else if (type == Powerup.TYPE_SPEED) {
+            ownerPaddle.speedUp();
+            speedy[owner] = true;
+            speedyStart[owner] = now;
+            slowed[owner] = false; // speed and slow should not fight each other
+        } else if (type == Powerup.TYPE_SLOW) {
+            getPaddle(opponent).slowDown();
+            slowed[opponent] = true;
+            slowedStart[opponent] = now;
+            speedy[opponent] = false;
+        }
+    }
+
+    /**
+     * gets a player's paddle
+     * pre:  player is 1 or 2
+     * post: returns player 1's paddle or player 2's paddle
+     */
+    private Paddle getPaddle(int player) {
+        if (player == 1) {
+            return playerPaddle;
+        }
+        return opponentPaddle;
+    }
+
+    /**
+     * gets the other player number
+     * pre:  player is 1 or 2
+     * post: returns 2 for player 1, or 1 for player 2
+     */
+    private int otherPlayer(int player) {
+        if (player == 1) {
+            return 2;
+        }
+        return 1;
     }
 
     /**
@@ -940,16 +787,6 @@ public class AirHockeyGame extends Game {
      * pre:  pucks and both paddles exist
      * post: any puck that hits a paddle moves out, reverses direction, and speeds up slightly
      */
-    /**
-     * plays the puck-hit sound, louder for faster (harder) hits
-     * pre:  puck has just been struck this frame
-     * post: the retro hit blip plays at a volume scaled by the puck's speed
-     */
-    private void playHitSound(Puck puck) {
-        float volume = (float) (0.45 + 0.55 * puck.getSpeedFraction());
-        SoundEffects.play("puck-hit", volume);
-    }
-
     private void handlePaddleCollisions() {
         for (int i = 0; i < pucks.size(); i++) {
             Puck puck = pucks.get(i);
@@ -961,6 +798,16 @@ public class AirHockeyGame extends Game {
                 playHitSound(puck);
             }
         }
+    }
+
+    /**
+     * plays the puck-hit sound, louder for faster hits
+     * pre:  puck has just been struck this frame
+     * post: the hit sound plays at a volume based on puck speed
+     */
+    private void playHitSound(Puck puck) {
+        float volume = (float) (0.45 + 0.55 * puck.getSpeedFraction());
+        SoundEffects.play("puck-hit", volume);
     }
 
     /**
