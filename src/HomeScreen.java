@@ -1,14 +1,11 @@
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.GridLayout;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -25,27 +22,22 @@ public class HomeScreen extends JFrame {
      */
     public HomeScreen() {
         setTitle("Air Hockey");
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                AirHockeyApp.quit();
-            }
-        });
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 400);
         setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JPanel panel = new JPanel(new GridLayout(5, 1, 0, 10));
         panel.setBackground(new Color(20, 30, 48));
+        panel.setBorder(BorderFactory.createEmptyBorder(45, 80, 45, 80));
 
         JLabel title = new JLabel("AIR HOCKEY");
         title.setFont(new Font("SansSerif", Font.BOLD, 36));
         title.setForeground(Color.WHITE);
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        title.setHorizontalAlignment(JLabel.CENTER);
 
         JLabel byline = new JLabel("by Brighton & Youngwoo");
         byline.setForeground(Color.LIGHT_GRAY);
-        byline.setAlignmentX(Component.CENTER_ALIGNMENT);
+        byline.setHorizontalAlignment(JLabel.CENTER);
 
         JButton playBtn = makeButton("PLAY", () -> {
             MusicPlayer.lowerVolume();
@@ -56,16 +48,11 @@ public class HomeScreen extends JFrame {
         JButton rulesBtn = makeButton("RULES", () -> showRules());
         JButton historyBtn = makeButton("MATCH HISTORY", () -> showHistory());
 
-        panel.add(Box.createVerticalGlue());
         panel.add(title);
         panel.add(byline);
-        panel.add(Box.createVerticalStrut(30));
         panel.add(playBtn);
-        panel.add(Box.createVerticalStrut(10));
         panel.add(rulesBtn);
-        panel.add(Box.createVerticalStrut(10));
         panel.add(historyBtn);
-        panel.add(Box.createVerticalGlue());
 
         setContentPane(panel);
     }
@@ -77,7 +64,6 @@ public class HomeScreen extends JFrame {
      */
     private JButton makeButton(String text, Runnable action) {
         JButton button = new JButton(text);
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
         button.addActionListener(e -> action.run());
         return button;
     }
