@@ -13,6 +13,7 @@ public class SoundEffects {
             return;
         }
 
+        // play it on another thread so the game does not freeze for a tiny bonk sound
         Thread soundThread = new Thread(() -> {
             try {
                 AudioInputStream audio = AudioSystem.getAudioInputStream(soundFile);
