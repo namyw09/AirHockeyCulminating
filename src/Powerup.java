@@ -10,6 +10,7 @@ import framework.GameObject;
 public class Powerup extends GameObject {
 
     public static final int RADIUS        = 18;   // base radius for the 800x600 layout
+    private static final int PADDING      = 4;    // extra px around the icon so the glow ring isn't clipped
     private int radius;                           // actual radius, scaled to the window
     public static final int FIELD_LIVE_MS = 5000; // ms the icon stays on the field
     public static final int EFFECT_MS     = 5000; // ms the paddle effect lasts after collection
@@ -38,11 +39,11 @@ public class Powerup extends GameObject {
         spawnTime   = spawnMillis;
         radius      = Math.max(6, (int) Math.round(RADIUS * scale));
 
-        // add 4px of padding on each side, otherwise the glow ring around the icon
-        // gets cut off at the edges of the component (learned that the annoying way)
-        setSize(radius * 2 + 8, radius * 2 + 8);
-        setX(cx - radius - 4);
-        setY(cy - radius - 4);
+        // pad each side, otherwise the glow ring around the icon gets clipped at the
+        // edges of the component (learned that the annoying way)
+        setSize(radius * 2 + PADDING * 2, radius * 2 + PADDING * 2);
+        setX(cx - radius - PADDING);
+        setY(cy - radius - PADDING);
     }
 
     /**
@@ -87,9 +88,9 @@ public class Powerup extends GameObject {
      *       gold "1.5x" for size, cyan arrows for speed, orange arrows for slow opponent
      */
     public void paint(Graphics g) {
-        // center within the padded component (RADIUS + 4px glow padding each side)
-        int cx = radius + 4;
-        int cy = radius + 4;
+        // center within the padded component (radius + glow padding each side)
+        int cx = radius + PADDING;
+        int cy = radius + PADDING;
         int r  = radius;
 
         // each powerup type gets its own color and label so players can tell them apart
@@ -114,7 +115,7 @@ public class Powerup extends GameObject {
 
         // soft glow ring
         g.setColor(glowColor);
-        g.fillOval(cx - r - 4, cy - r - 4, (r + 4) * 2, (r + 4) * 2);
+        g.fillOval(cx - r - PADDING, cy - r - PADDING, (r + PADDING) * 2, (r + PADDING) * 2);
 
         // filled circle
         g.setColor(fillColor);
